@@ -4,21 +4,31 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>Hello World | Oylwhu Blog</title>
+  <title>网络三要素及交换机工作原理 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+  <meta name="description" content="路由器工作原理及数据流分析
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2016/01/24/hello-world/index.html">
+<meta property="og:title" content="网络三要素及交换机工作原理">
+<meta property="og:url" content="http://yoursite.com/2016/02/27/Route/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
-<meta property="og:updated_time" content="2016-01-24T06:48:52.023Z">
+<meta property="og:description" content="路由器工作原理及数据流分析
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route4.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route5.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route6.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route7.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png">
+<meta property="og:updated_time" content="2016-02-27T13:06:40.420Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="twitter:title" content="网络三要素及交换机工作原理">
+<meta name="twitter:description" content="路由器工作原理及数据流分析
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -163,11 +173,11 @@ Quick">
 	</div>
 </nav>
 
-      <div class="body-wrap"><article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-Route" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2016/01/24/hello-world/" class="article-date">
-  	<time datetime="2016-01-24T06:48:52.023Z" itemprop="datePublished">2016-01-24</time>
+      <a href="/2016/02/27/Route/" class="article-date">
+  	<time datetime="2016-02-27T13:05:19.000Z" itemprop="datePublished">2016-02-27</time>
 </a>
     </div>
   
@@ -180,7 +190,7 @@ Quick">
         
   
     <h1 class="article-title" itemprop="name">
-      Hello World
+      网络三要素及交换机工作原理
     </h1>
   
 
@@ -188,7 +198,15 @@ Quick">
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
+	</div>
+
         
+	<div class="article-category tagcloud">
+	<a class="article-category-link" href="/categories/Network/">Network</a>
+	</div>
+
 
         <div class="clearfix"></div>
       </div>
@@ -196,15 +214,17 @@ Quick">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="http://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick_Start"><a href="#Quick_Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create_a_new_post"><a href="#Create_a_new_post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run_server"><a href="#Run_server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate_static_files"><a href="#Generate_static_files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy_to_remote_sites"><a href="#Deploy_to_remote_sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+        <h2 id="u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790"><a href="#u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790" class="headerlink" title="路由器工作原理及数据流分析"></a>路由器工作原理及数据流分析</h2><blockquote>
+<p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br>当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。<br>当不在同网段时，将数据包发送给默认网关，由网关进行三层转发。<br>“与”运算时用的是自己的掩码。如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png" alt="主机通信原理测试"></p>
+</blockquote>
+<hr>
+<blockquote>
+<p>三层转发过程：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png" alt="三层转发过程"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route4.png" alt="步骤一"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route5.png" alt="步骤二"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route6.png" alt="步骤三"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route7.png" alt="步骤四"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png" alt="步骤五"><br>TTL是 Time To Live的缩写，该字段指定IP包被路由器丢弃之前允许通过的最大网段数量。TTL是IPv4包头的一个8 bit字段。TTL的作用是限制IP数据包在计算机网络中的存在的时间。TTL的最大值是255，TTL的一个推荐值是64。虽然TTL从字面上翻译，是可以存活的时间，但实际上TTL是IP数据包在计算机网络中可以转发的最大跳数。TL字段由IP数据包的发送者设置，在IP数据包从源到目的的整个转发路径上，每经过一个路由器，路由器都会修改这个TTL字段值，具体的做法是把该TTL的值减1，然后再将IP包转发出去。如果在IP包到达目的IP之前，TTL减少为0，路由器将会丢弃收到的TTL=0的IP包并向IP包的发送者发送 ICMP time exceeded消息。<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png" alt="步骤六"></p>
+</blockquote>
+<hr>
+<blockquote>
+<p>电脑的ARP表：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png" alt="电脑ARP表"><br>可以看到局域网内广播和组播的地址，以及联系过的电脑主机。</p>
+</blockquote>
 
       
     </div>
@@ -214,15 +234,11 @@ Quick">
     
 <nav id="article-nav">
   
-    <a href="/2016/02/27/Net&&Switsh/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
-        
-          网络三要素及交换机工作原理
-        
-      </div>
-    </a>
   
+    <a href="/2016/02/27/Net&&Switsh/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">网络三要素及交换机工作原理</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
   
 </nav>
 
@@ -255,7 +271,7 @@ Quick">
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="hello-world" data-title="Hello World" data-url="http://yoursite.com/2016/01/24/hello-world/"></div>
+	<div class="ds-thread" data-thread-key="Route" data-title="网络三要素及交换机工作原理" data-url="http://yoursite.com/2016/02/27/Route/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
