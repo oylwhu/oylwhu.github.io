@@ -4,31 +4,26 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>路由器工作原理及数据流分析 | Oylwhu Blog</title>
+  <title>VLAN | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+  <meta name="description" content="VLAN
+概念：VLAN（Virtual Local Area Network）作用：隔离业务；分割广播域默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。如：192.168.10.0/24 192.168.20.0/24VLAN的区分：    在源地址和长度/类型字节之间插入长度为4字节的802.1Q帧头。“VLAN”视频播放地址">
 <meta property="og:type" content="article">
-<meta property="og:title" content="路由器工作原理及数据流分析">
-<meta property="og:url" content="http://yoursite.com/2015/02/17/Route/index.html">
+<meta property="og:title" content="VLAN">
+<meta property="og:url" content="http://yoursite.com/2015/02/20/VLAN/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route4.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route5.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route6.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route7.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png">
-<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png">
-<meta property="og:updated_time" content="2016-02-27T13:39:22.899Z">
+<meta property="og:description" content="VLAN
+概念：VLAN（Virtual Local Area Network）作用：隔离业务；分割广播域默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。如：192.168.10.0/24 192.168.20.0/24VLAN的区分：    在源地址和长度/类型字节之间插入长度为4字节的802.1Q帧头。“VLAN”视频播放地址">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/3_VLAN1.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/3_VLAN2.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/3_VLAN3.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/3_VLAN4.png">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/3_VLAN5.png">
+<meta property="og:updated_time" content="2016-02-27T13:45:50.358Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="路由器工作原理及数据流分析">
-<meta name="twitter:description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+<meta name="twitter:title" content="VLAN">
+<meta name="twitter:description" content="VLAN
+概念：VLAN（Virtual Local Area Network）作用：隔离业务；分割广播域默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。如：192.168.10.0/24 192.168.20.0/24VLAN的区分：    在源地址和长度/类型字节之间插入长度为4字节的802.1Q帧头。“VLAN”视频播放地址">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -173,11 +168,11 @@
 	</div>
 </nav>
 
-      <div class="body-wrap"><article id="post-Route" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-VLAN" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2015/02/17/Route/" class="article-date">
-  	<time datetime="2015-02-17T13:05:19.000Z" itemprop="datePublished">2015-02-17</time>
+      <a href="/2015/02/20/VLAN/" class="article-date">
+  	<time datetime="2015-02-20T02:13:09.000Z" itemprop="datePublished">2015-02-20</time>
 </a>
     </div>
   
@@ -190,7 +185,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      路由器工作原理及数据流分析
+      VLAN
     </h1>
   
 
@@ -214,16 +209,8 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790"><a href="#u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790" class="headerlink" title="路由器工作原理及数据流分析"></a>路由器工作原理及数据流分析</h2><blockquote>
-<p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br>当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。<br>当不在同网段时，将数据包发送给默认网关，由网关进行三层转发。<br>“与”运算时用的是自己的掩码。如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png" alt="主机通信原理测试"></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>三层转发过程：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png" alt="三层转发过程"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route4.png" alt="步骤一"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route5.png" alt="步骤二"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route6.png" alt="步骤三"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route7.png" alt="步骤四"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png" alt="步骤五"><br>TTL是 Time To Live的缩写，该字段指定IP包被路由器丢弃之前允许通过的最大网段数量。TTL是IPv4包头的一个8 bit字段。TTL的作用是限制IP数据包在计算机网络中的存在的时间。TTL的最大值是255，TTL的一个推荐值是64。虽然TTL从字面上翻译，是可以存活的时间，但实际上TTL是IP数据包在计算机网络中可以转发的最大跳数。TL字段由IP数据包的发送者设置，在IP数据包从源到目的的整个转发路径上，每经过一个路由器，路由器都会修改这个TTL字段值，具体的做法是把该TTL的值减1，然后再将IP包转发出去。如果在IP包到达目的IP之前，TTL减少为0，路由器将会丢弃收到的TTL=0的IP包并向IP包的发送者发送 ICMP time exceeded消息。<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png" alt="步骤六"></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>电脑的ARP表：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png" alt="电脑ARP表"><br>可以看到局域网内广播和组播的地址，以及联系过的电脑主机。<br><a href="http://edu.51cto.com/lesson/id-20964.html" target="_blank" rel="external">“路由器工作原理及数据流分析”视频播放地址</a></p>
+        <h2 id="VLAN"><a href="#VLAN" class="headerlink" title="VLAN"></a>VLAN</h2><blockquote>
+<p>概念：VLAN（Virtual Local Area Network）<br>作用：隔离业务；分割广播域<br>默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN1.png" alt="VLAN隔离业务"><br>如：192.168.10.0/24 192.168.20.0/24<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN2.png" alt="VLAN分割广播域"><br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN3.png" alt="Dot1Q以太网帧格式"><br>VLAN的区分：<br>    在源地址和长度/类型字节之间插入长度为4字节的802.1Q帧头。<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN4.png" alt="Dot1Q帧抓包"><br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN5.png" alt="相同VLAN可以互访"><br><a href="http://edu.51cto.com/lesson/id-20980.html" target="_blank" rel="external">“VLAN”视频播放地址</a></p>
 </blockquote>
 
       
@@ -234,18 +221,9 @@
     
 <nav id="article-nav">
   
-    <a href="/2015/02/21/VLAN/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
-        
-          VLAN
-        
-      </div>
-    </a>
   
-  
-    <a href="/2015/01/19/Net&&Switsh/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">网络三要素及交换机工作原理</div>
+    <a href="/2015/02/19/Route/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">路由器工作原理及数据流分析</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -280,7 +258,7 @@
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="Route" data-title="路由器工作原理及数据流分析" data-url="http://yoursite.com/2015/02/17/Route/"></div>
+	<div class="ds-thread" data-thread-key="VLAN" data-title="VLAN" data-url="http://yoursite.com/2015/02/20/VLAN/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
