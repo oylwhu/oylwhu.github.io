@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>MapReduce实例浅析 | Oylwhu Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="##MapReduce实例浅析##
+####1.MapReduce概述####
+
+Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MapReduce实例浅析">
+<meta property="og:url" content="http://yoursite.com/2015/10/02/MaoReduce实例浅析/index.html">
+<meta property="og:site_name" content="Oylwhu Blog">
+<meta property="og:description" content="##MapReduce实例浅析##
+####1.MapReduce概述####
+
+Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili1.jpg">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce%26%26Shili2.jpg">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili3.jpg">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili4.jpg">
+<meta property="og:updated_time" content="2016-03-01T12:15:01.765Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MapReduce实例浅析">
+<meta name="twitter:description" content="##MapReduce实例浅析##
+####1.MapReduce概述####
+
+Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们">
+  
+    <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/img/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://7xract.com1.z0.glb.clouddn.com/favicon.png" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Oylwhu Blog</a></h1>
+		</hgroup>
+
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/oylwhu" title="github">github</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/hadoop/" style="font-size: 10px;">hadoop</a> <a href="/tags/network/" style="font-size: 15px;">network</a> <a href="/tags/学习笔记/" style="font-size: 20px;">学习笔记</a>
+					</div>
+				</section>
+				
+				
+				
+
+				
+				
+				<section class="switch-part switch-part3">
+				
+					<div id="js-aboutme">短暂年华，绚丽人生。用那个青春的热血点燃未来的希望，让人生的每一个角落都色彩飞扬。让那犹如白纸的未来色彩斑斓，不再单调，让我们的人生像一部电影不断演绎精彩的每一个片段。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Oylwhu Blog</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://7xract.com1.z0.glb.clouddn.com/favicon.png" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Oylwhu Blog</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/oylwhu" title="github">github</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-MaoReduce实例浅析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/10/02/MaoReduce实例浅析/" class="article-date">
+  	<time datetime="2015-10-02T07:23:12.000Z" itemprop="datePublished">2015-10-02</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      MapReduce实例浅析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
+	</div>
+
+        
+	<div class="article-category tagcloud">
+	<a class="article-category-link" href="/categories/Hadoop/">Hadoop</a>
+	</div>
+
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>##MapReduce实例浅析##</p>
+<p>####1.MapReduce概述####</p>
+<blockquote>
+<p>Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。<br>    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们。框架会对map的输出先进行排序， 然后把结果输入给reduce任务。通常作业的输入和输出都会被存储在文件系统中。 整个框架负责任务的调度和监控，以及重新执行已经失败的任务。<br>    通常，Map/Reduce框架和分布式文件系统是运行在一组相同的节点上的，也就是说，计算节点和存储节点通常在一起。这种配置允许框架在那些已经存好数据的节点上高效地调度任务，这可以使整个集群的网络带宽被非常高效地利用。<br>    Map/Reduce框架由一个单独的master JobTracker 和每个集群节点一个slave TaskTracker共同组成。master负责调度构成一个作业的所有任务，这些任务分布在不同的slave上，master监控它们的执行，重新执行已经失败的任务。而slave仅负责执行由master指派的任务。<br>    应用程序至少应该指明输入/输出的位置（路径），并通过实现合适的接口或抽象类提供map和reduce函数。再加上其他作业的参数，就构成了作业配置（job configuration）。然后，Hadoop的 job client提交作业（jar包/可执行程序等）和配置信息给JobTracker，后者负责分发这些软件和配置信息给slave、调度任务并监控它们的执行，同时提供状态和诊断信息给job-client。<br>虽然Hadoop框架是用Java实现的，但Map/Reduce应用程序则不一定要用 Java来写 。<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili1.jpg" alt="MapReduce处理大数据过程"></p>
+</blockquote>
+<p>####2.样例分析：单词计数####</p>
+<blockquote>
+<p>#####WordCount源码分析#####<br>单词计数是最简单也是最能体现MapReduce思想的程序之一，该程序完整的代码可以在Hadoop安装包的src/examples目录下找到<br>单词计数主要完成的功能是：统计一系列文本文件中每个单词出现的次数，如图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce%26%26Shili2.jpg" alt="单词计数"><br>（1）    Map过程<br>Map过程需要继承org.apache.hadoop.mapreduce包中的Mapper类，并重写map方法<br>通过在map方法中添加两句把key值和value值输出到控制台的代码，可以发现map方法中的value值存储的是文本文件中的一行（以回车符作为行结束标记），而key值为该行的首字符相对于文本文件的首地址的偏移量。然后StringTokenizer类将每一行拆分成一个个的单词，并将<word,1>作为map方法的结果输出，其余的工作都交由MapReduce框架处理。其中IntWritable和Text类是Hadoop对int和string类的封装，这些类能够被串行化，以方便在分布式环境中进行数据交换。</word,1></p>
+<p>TokenizerMapper的实现代码如下：</p>
+</blockquote>
+<pre><code>public static class TokenizerMapper extends Mapper&lt;Object, Text, Text, IntWritable&gt;{
+    private final static IntWritable one = new IntWritable(1);
+    private Text word = new Text();
+
+    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+    System.out.println(&quot;key = &quot; + key.toString());
+    //添加查看key值
+    System.out.println(&quot;value = &quot; + value.toString());
+    //添加查看value值
+    StringTokenizer itr = new StringTokenizer(value.toString());
+        while (itr.hasMoreTokens()) {
+            word.set(itr.nextToken());
+            context.write(word, one);
+        }
+    }
+}
+</code></pre><p>（2）    Reduce过程</p>
+<blockquote>
+<p>Reduce过程需要继承org.apache.hadoop.mapreduce包中的Reducer类，并重写reduce方法<br>reduce方法的输入参数key为单个单词，而values是由各Mapper上对应单词的计数值所组成的列表，所以只要遍历values并求和，即可得到某个单词的出现总次数<br>IntSumReduce类的实现代码如下：</p>
+</blockquote>
+<pre><code>public static class TokenizerMapper extends Mapper&lt;Object, Text, Text, IntWritable&gt;{
+    private final static IntWritable one = new IntWritable(1);
+    private Text word = new Text();
+
+    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+    System.out.println(&quot;key = &quot; + key.toString());
+    //添加查看key值
+    System.out.println(&quot;value = &quot; + value.toString());
+    //添加查看value值
+    StringTokenizer itr = new StringTokenizer(value.toString());
+    while (itr.hasMoreTokens()) {
+        word.set(itr.nextToken());
+        context.write(word, one);
+    }
+}
+</code></pre><p>}</p>
+<p>（3）    执行MapReduce任务</p>
+<blockquote>
+<p>在MapReduce中，由Job对象负责管理和运行一个计算任务，并通过Job的一些方法对任务的参数进行相关的设置。此处设置了使用TokenizerMapper完成Map过程和使用的IntSumReduce完成Combine和Reduce过程。还设置了Map过程和Reduce过程的输出类型：key的类型为Text，value的类型为IntWritable。任务的输入和输出路径则由命令行参数指定，并由FileInputFormat和FileOutputFormat分别设定。完成相应任务的参数设定后，即可调用job.waitForCompletion()方法执行任务，主函数实现如下：</p>
+</blockquote>
+<pre><code>public static void main(String[] args) throws Exception {
+Configuration conf = new Configuration();
+String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+if (otherArgs.length != 2) {
+  System.err.println(&quot;Usage: wordcount &lt;in&gt; &lt;out&gt;&quot;);
+  System.exit(2);
+}
+Job job = new Job(conf, &quot;word count&quot;);
+job.setJarByClass(wordCount.class);
+job.setMapperClass(TokenizerMapper.class);
+job.setCombinerClass(IntSumReducer.class);
+job.setReducerClass(IntSumReducer.class);
+job.setOutputKeyClass(Text.class);
+job.setOutputValueClass(IntWritable.class);
+FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
+FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+System.exit(job.waitForCompletion(true) ? 0 : 1);
+}
+}
+</code></pre><p>#####WordCount处理过程#####</p>
+<blockquote>
+<p>上面给出了WordCount的设计思路和源码，但是没有深入细节，下面对WordCount进行更加详细的分析：<br>1.将文件拆分成splits，由于测试用的文件较小，所以每一个文件为一个split，并将文件按行分割成<key, value="">对，如图，这一步由Mapreduce框架自动完成，其中偏移量包括了回车所占的字符<br>2.将分割好的<key, value="">对交给用户定义的map方法进行处理，生成新的<key, value="">对<br>3.得到map方法输出的<key, value="">对后，Mapper会将它们按照key值进行排序，并执行Combine过程，将key值相同的value值累加，得到Mapper的最终输出结果，如图：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili3.jpg" alt="Reduce过程"><br>4.Reduce先对从Mapper接收的数据进行排序，再交由用户自定义的reduce方法进行处理，得到新的<key, value="">对，并作为WordCount的输出结果，如图：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili4.jpg" alt="Reduce输出结果"></key,></key,></key,></key,></key,></p>
+</blockquote>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/10/03/MapReduce框架详解/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          MapReduce框架详解
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/02/20/VLAN/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">VLAN</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="MaoReduce实例浅析" data-title="MapReduce实例浅析" data-url="http://yoursite.com/2015/10/02/MaoReduce实例浅析/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2016 Oylwhu Blog
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
