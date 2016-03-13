@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>Job的Map/Reduce Task初始化 | Oylwhu Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。
+p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Job的Map/Reduce Task初始化">
+<meta property="og:url" content="http://yoursite.com/2015/10/12/Job的MapReduce Task初始化/index.html">
+<meta property="og:site_name" content="Oylwhu Blog">
+<meta property="og:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。
+p">
+<meta property="og:updated_time" content="2016-03-13T09:57:39.015Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Job的Map/Reduce Task初始化">
+<meta name="twitter:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。
+p">
+  
+    <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/img/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://7xract.com1.z0.glb.clouddn.com/favicon.png" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">Oylwhu Blog</a></h1>
+		</hgroup>
+
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>标签</li>
+						
+						
+						<li>关于我</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="https://github.com/oylwhu" title="github">github</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/hadoop/" style="font-size: 10px;">hadoop</a> <a href="/tags/network/" style="font-size: 15px;">network</a> <a href="/tags/学习笔记/" style="font-size: 20px;">学习笔记</a>
+					</div>
+				</section>
+				
+				
+				
+
+				
+				
+				<section class="switch-part switch-part3">
+				
+					<div id="js-aboutme">短暂年华，绚丽人生。用那个青春的热血点燃未来的希望，让人生的每一个角落都色彩飞扬。让那犹如白纸的未来色彩斑斓，不再单调，让我们的人生像一部电影不断演绎精彩的每一个片段。</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">Oylwhu Blog</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://7xract.com1.z0.glb.clouddn.com/favicon.png" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">Oylwhu Blog</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="https://github.com/oylwhu" title="github">github</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-Job的MapReduce Task初始化" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2015/10/12/Job的MapReduce Task初始化/" class="article-date">
+  	<time datetime="2015-10-12T12:32:10.000Z" itemprop="datePublished">2015-10-12</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Job的Map/Reduce Task初始化
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html" target="_blank" rel="external">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。</p>
+<pre><code>public void initJob(JobInProgress job) {
+  if (null == job) {
+    LOG.info(&quot;Init on null job is not valid&quot;);
+    return;
+  }
+
+  try {
+    JobStatus prevStatus = (JobStatus)job.getStatus().clone();
+    LOG.info(&quot;Initializing &quot; + job.getJobID());
+    job.initTasks();
+    // Inform the listeners if the job state has changed
+    // Note : that the job will be in PREP state.
+    JobStatus newStatus = (JobStatus)job.getStatus().clone();
+    if (prevStatus.getRunState() != newStatus.getRunState()) {
+      JobStatusChangeEvent event = 
+        new JobStatusChangeEvent(job, EventType.RUN_STATE_CHANGED, prevStatus, 
+            newStatus);
+      synchronized (JobTracker.this) {
+        updateJobInProgressListeners(event);
+      }
+    }
+  } catch (KillInterruptedException kie) {
+    //   If job was killed during initialization, job state will be KILLED
+    LOG.error(&quot;Job initialization interrupted:\n&quot; +
+        StringUtils.stringifyException(kie));
+    killJob(job);
+  } catch (Throwable t) {
+    String failureInfo = 
+      &quot;Job initialization failed:\n&quot; + StringUtils.stringifyException(t);
+    // If the job initialization is failed, job state will be FAILED
+    LOG.error(failureInfo);
+    job.getStatus().setFailureInfo(failureInfo);
+    failJob(job);
+  }
+}
+</code></pre><p>可以看出，先进行 job.initTasks()，初始化Map和Reduce任务，之后更新所有</p>
+<pre><code>synchronized (JobTracker.this) {
+  updateJobInProgressListeners(event);
+}
+</code></pre><p>Map/Reduce Task初始化完毕是一个事件，下面的代码进行消息通知：</p>
+<pre><code>// Update the listeners about the job
+// Assuming JobTracker is locked on entry.
+private void updateJobInProgressListeners(JobChangeEvent event) {
+  for (JobInProgressListener listener : jobInProgressListeners) {
+    listener.jobUpdated(event);
+  }
+}
+</code></pre><p>可见，在Job放入队列时使用的是jobAdded，此时使用的是jobUpdated。我们在后面再分析jobUpdated后的细节，此时先分析从jobAdded到jobUpdated之间，Job的初始化过程，主要分为几个阶段。</p>
+<p>首先执行的是获取Split信息，这一部分信息事先已经由JobClient上传至HDFS中。</p>
+<hr>
+<p>1、读取Split信息：</p>
+<pre><code>//
+// read input splits and create a map per a split
+//
+TaskSplitMetaInfo[] splits = createSplits(jobId);
+if (numMapTasks != splits.length) {
+  throw new IOException(&quot;Number of maps in JobConf doesn&apos;t match number of &quot; +
+      &quot;recieved splits for job &quot; + jobId + &quot;! &quot; +
+      &quot;numMapTasks=&quot; + numMapTasks + &quot;, #splits=&quot; + splits.length);
+}
+numMapTasks = splits.length;
+</code></pre><p>createSplits方法的代码为：</p>
+<pre><code>TaskSplitMetaInfo[] createSplits(org.apache.hadoop.mapreduce.JobID jobId)
+throws IOException {
+  TaskSplitMetaInfo[] allTaskSplitMetaInfo =
+    SplitMetaInfoReader.readSplitMetaInfo(jobId, fs, jobtracker.getConf(),
+        jobSubmitDir);
+  return allTaskSplitMetaInfo;
+}
+</code></pre><p>即读取job.splitmetainfo文件，获得Split信息：</p>
+<pre><code>public static JobSplit.TaskSplitMetaInfo[] readSplitMetaInfo(
+    JobID jobId, FileSystem fs, Configuration conf, Path jobSubmitDir) 
+throws IOException {
+  long maxMetaInfoSize = conf.getLong(&quot;mapreduce.jobtracker.split.metainfo.maxsize&quot;, 
+      10000000L);
+  Path metaSplitFile = JobSubmissionFiles.getJobSplitMetaFile(jobSubmitDir);
+  FileStatus fStatus = fs.getFileStatus(metaSplitFile);
+  if (maxMetaInfoSize &gt; 0 &amp;&amp; fStatus.getLen() &gt; maxMetaInfoSize) {
+    throw new IOException(&quot;Split metadata size exceeded &quot; +
+        maxMetaInfoSize +&quot;. Aborting job &quot; + jobId);
+  }
+  FSDataInputStream in = fs.open(metaSplitFile);
+  byte[] header = new byte[JobSplit.META_SPLIT_FILE_HEADER.length];
+  in.readFully(header);
+  if (!Arrays.equals(JobSplit.META_SPLIT_FILE_HEADER, header)) {
+    throw new IOException(&quot;Invalid header on split file&quot;);
+  }
+  int vers = WritableUtils.readVInt(in);
+  if (vers != JobSplit.META_SPLIT_VERSION) {
+    in.close();
+    throw new IOException(&quot;Unsupported split version &quot; + vers);
+  }
+  int numSplits = WritableUtils.readVInt(in); //TODO: check for insane values
+  JobSplit.TaskSplitMetaInfo[] allSplitMetaInfo = 
+    new JobSplit.TaskSplitMetaInfo[numSplits];
+  final int maxLocations =
+    conf.getInt(JobSplitWriter.MAX_SPLIT_LOCATIONS, Integer.MAX_VALUE);
+  for (int i = 0; i &lt; numSplits; i++) {
+    JobSplit.SplitMetaInfo splitMetaInfo = new JobSplit.SplitMetaInfo();
+    splitMetaInfo.readFields(in);
+    final int numLocations = splitMetaInfo.getLocations().length;
+    if (numLocations &gt; maxLocations) {
+      throw new IOException(&quot;Max block location exceeded for split: #&quot;  + i +
+            &quot; splitsize: &quot; + numLocations + &quot; maxsize: &quot; + maxLocations);
+    }
+    JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
+        JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
+        splitMetaInfo.getStartOffset());
+    allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
+        splitMetaInfo.getLocations(), 
+        splitMetaInfo.getInputDataLength());
+  }
+  in.close();
+  return allSplitMetaInfo;
+}
+</code></pre><p>涉及读取文件的代码有：</p>
+<pre><code>FSDataInputStream in = fs.open(metaSplitFile);
+byte[] header = new byte[JobSplit.META_SPLIT_FILE_HEADER.length];
+in.readFully(header);
+</code></pre><p>这一部分先读取job.splitmetainfo文件的头部，头部实际上是字符串”META-SPL“，该信息由下面的类指定：</p>
+<pre><code>public class JobSplit {
+  static final int META_SPLIT_VERSION = 1;
+  static final byte[] META_SPLIT_FILE_HEADER;
+
+  static {
+    try {
+      META_SPLIT_FILE_HEADER = &quot;META-SPL&quot;.getBytes(&quot;UTF-8&quot;);
+    } catch (UnsupportedEncodingException u) {
+      throw new RuntimeException(u);
+    }
+  } 
+.......
+</code></pre><p>读取了文件头之后，剩下的是读取版本信息：</p>
+<pre><code>int vers = WritableUtils.readVInt(in);
+if (vers != JobSplit.META_SPLIT_VERSION) {
+  in.close();
+  throw new IOException(&quot;Unsupported split version &quot; + vers);
+}
+</code></pre><p>检查了版本（1）后，接下来就是读取Split的数量：</p>
+<pre><code>int numSplits = WritableUtils.readVInt(in); //TODO: check for insane values
+JobSplit.TaskSplitMetaInfo[] allSplitMetaInfo = 
+  new JobSplit.TaskSplitMetaInfo[numSplits];
+</code></pre><p>并根据Split数量创建JobSplit.TaskSplitMetaInfo数组。接下来对于每个Split，循环读取位置等信息：</p>
+<pre><code>for (int i = 0; i &lt; numSplits; i++) {
+  JobSplit.SplitMetaInfo splitMetaInfo = new JobSplit.SplitMetaInfo();
+  splitMetaInfo.readFields(in);
+  final int numLocations = splitMetaInfo.getLocations().length;
+  if (numLocations &gt; maxLocations) {
+    throw new IOException(&quot;Max block location exceeded for split: #&quot;  + i +
+          &quot; splitsize: &quot; + numLocations + &quot; maxsize: &quot; + maxLocations);
+  }
+  JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
+      JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
+      splitMetaInfo.getStartOffset());
+  allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
+      splitMetaInfo.getLocations(), 
+      splitMetaInfo.getInputDataLength());
+}
+</code></pre><p>在上面的代码中，splitMetaInfo.readFields(in)可以获得位置信息：</p>
+<pre><code>public void readFields(DataInput in) throws IOException {
+  int len = WritableUtils.readVInt(in);
+  locations = new String[len];
+  for (int i = 0; i &lt; locations.length; i++) {
+    locations[i] = Text.readString(in);
+  }
+  startOffset = WritableUtils.readVLong(in);
+  inputDataLength = WritableUtils.readVLong(in);
+}
+</code></pre><p>所谓的位置，实际上就是指这个Split在j哪些服务器的信息。获取到位置、Split数据长度等信息后，全部纪录在对象JobSplit.TaskSplitMetaInfo中：</p>
+<pre><code>JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
+    JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
+    splitMetaInfo.getStartOffset());
+allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
+    splitMetaInfo.getLocations(), 
+    splitMetaInfo.getInputDataLength());
+</code></pre><p>返回allSplitMetaInfo数组。</p>
+<hr>
+<p>2、根据Map任务数量创建相同数量的TaskInProgress对象：<br>上面返回的数组大小即纪录了Split的个数，也决定了Map的数量，验证这些服务器的合法性：</p>
+<pre><code>numMapTasks = splits.length;
+// Sanity check the locations so we don&apos;t create/initialize unnecessary tasks
+for (TaskSplitMetaInfo split : splits) {
+  NetUtils.verifyHostnames(split.getLocations());
+}
+</code></pre><p>在监控相关类中设置相应信息：</p>
+<pre><code>jobtracker.getInstrumentation().addWaitingMaps(getJobID(), numMapTasks);
+jobtracker.getInstrumentation().addWaitingReduces(getJobID(), numReduceTasks);
+this.queueMetrics.addWaitingMaps(getJobID(), numMapTasks);
+this.queueMetrics.addWaitingReduces(getJobID(), numReduceTasks);
+</code></pre><p>接下来创建TaskInProgress对象，每个Map都对应于一个TaskInProgress对象：</p>
+<pre><code>maps = new TaskInProgress[numMapTasks];
+for(int i=0; i &lt; numMapTasks; ++i) {
+  inputLength += splits[i].getInputDataLength();
+  maps[i] = new TaskInProgress(jobId, jobFile, 
+                               splits[i], 
+                               jobtracker, conf, this, i, numSlotsPerMap);
+}
+</code></pre><p>TaskInProgress纪录了一个Map Task或Reduce Task运行相关的所有信息，类似于JobInProgress，TaskInProgress的构造函数有两个，分别针对Map和Reduce的，对于Map的：</p>
+<pre><code>/**
+ * Constructor for MapTask
+ */
+public TaskInProgress(JobID jobid, String jobFile, 
+                      TaskSplitMetaInfo split, 
+                      JobTracker jobtracker, JobConf conf, 
+                      JobInProgress job, int partition,
+                      int numSlotsRequired) {
+  this.jobFile = jobFile;
+  this.splitInfo = split;
+  this.jobtracker = jobtracker;
+  this.job = job;
+  this.conf = conf;
+  this.partition = partition;
+  this.maxSkipRecords = SkipBadRecords.getMapperMaxSkipRecords(conf);
+  this.numSlotsRequired = numSlotsRequired;
+  setMaxTaskAttempts();
+  init(jobid);
+}
+</code></pre><p>splitInfo纪录了当前Split的信息，partition即表示这是第几个Map Task，numSlotsRequired为1.<br>创建好的TaskInProgress将会放入缓存中：</p>
+<pre><code>if (numMapTasks &gt; 0) { 
+  nonRunningMapCache = createCache(splits, maxLevel);
+}
+</code></pre><p>nonRunningMapCache是一个未运行起来的Map任务的关于主机信息等等的缓存，其索引为Node，即服务器；而其值为TaskInProgress对象，其声明为，因此，实际上就是解析Split所在的服务器，缓存下来，供后续调度使用：</p>
+<pre><code>Map&lt;Node, List&lt;TaskInProgress&gt;&gt; nonRunningMapCache;
+</code></pre><p>其方法代码为：</p>
+<pre><code>private Map&lt;Node, List&lt;TaskInProgress&gt;&gt; createCache(
+                               TaskSplitMetaInfo[] splits, int maxLevel)
+                               throws UnknownHostException {
+  Map&lt;Node, List&lt;TaskInProgress&gt;&gt; cache = 
+    new IdentityHashMap&lt;Node, List&lt;TaskInProgress&gt;&gt;(maxLevel);
+
+  Set&lt;String&gt; uniqueHosts = new TreeSet&lt;String&gt;();
+  for (int i = 0; i &lt; splits.length; i++) {
+    String[] splitLocations = splits[i].getLocations();
+    if (splitLocations == null || splitLocations.length == 0) {
+      nonLocalMaps.add(maps[i]);
+      continue;
+    }
+    for(String host: splitLocations) {
+      Node node = jobtracker.resolveAndAddToTopology(host);
+      uniqueHosts.add(host);
+      LOG.info(&quot;tip:&quot; + maps[i].getTIPId() + &quot; has split on node:&quot; + node);
+      for (int j = 0; j &lt; maxLevel; j++) {
+        List&lt;TaskInProgress&gt; hostMaps = cache.get(node);
+        if (hostMaps == null) {
+          hostMaps = new ArrayList&lt;TaskInProgress&gt;();
+          cache.put(node, hostMaps);
+          hostMaps.add(maps[i]);
+        }
+        //check whether the hostMaps already contains an entry for a TIP
+        //This will be true for nodes that are racks and multiple nodes in
+        //the rack contain the input for a tip. Note that if it already
+        //exists in the hostMaps, it must be the last element there since
+        //we process one TIP at a time sequentially in the split-size order
+        if (hostMaps.get(hostMaps.size() - 1) != maps[i]) {
+          hostMaps.add(maps[i]);
+        }
+        node = node.getParent();
+      }
+    }
+  }
+
+  // Calibrate the localityWaitFactor - Do not override user intent!
+  if (localityWaitFactor == DEFAULT_LOCALITY_WAIT_FACTOR) {
+    int jobNodes = uniqueHosts.size();
+    int clusterNodes = jobtracker.getNumberOfUniqueHosts();
+
+    if (clusterNodes &gt; 0) {
+      localityWaitFactor = 
+        Math.min((float)jobNodes/clusterNodes, localityWaitFactor);
+    }
+    LOG.info(jobId + &quot; LOCALITY_WAIT_FACTOR=&quot; + localityWaitFactor);
+  }
+
+  return cache;
+}
+</code></pre><hr>
+<p>3、根据Reduce任务数量创建相同数量的TaskInProgress对象：<br>代码和Map基本相同：</p>
+<pre><code>//
+// Create reduce tasks
+//
+this.reduces = new TaskInProgress[numReduceTasks];
+for (int i = 0; i &lt; numReduceTasks; i++) {
+  reduces[i] = new TaskInProgress(jobId, jobFile, 
+                                  numMapTasks, i, 
+                                  jobtracker, conf, this, numSlotsPerReduce);
+  nonRunningReduces.add(reduces[i]);
+}
+</code></pre><hr>
+<p> 4、计算Reduce任务启动前Map最少应该启动的数量：<br>根据MapReduce原理，先进行Map计算，之后中间结果再传递至Reduce计算，因此，Map要先进行计算，Reduce如果和Map一起启动，那么，Reduce必然先一直处于等待中。这会消耗机器资源，且Shuffle时间比较长。所以，这个值默认是Map所有任务数量的5%：</p>
+<pre><code>// Calculate the minimum number of maps to be complete before 
+// we should start scheduling reduces
+completedMapsForReduceSlowstart = 
+  (int)Math.ceil(
+      (conf.getFloat(&quot;mapred.reduce.slowstart.completed.maps&quot;, 
+                     DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART) * 
+       numMapTasks));
+// ... use the same for estimating the total output of all maps
+resourceEstimator.setThreshhold(completedMapsForReduceSlowstart);
+</code></pre><p>从DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART可以看出，是5%:</p>
+<pre><code>private static float DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART = 0.05f;
+</code></pre><hr>
+<p> 5、创建Map和Reduce任务的清理任务，各一个：</p>
+<pre><code>// create cleanup two cleanup tips, one map and one reduce.
+cleanup = new TaskInProgress[2];
+// cleanup map tip. This map doesn&apos;t use any splits. Just assign an empty
+// split.
+TaskSplitMetaInfo emptySplit = JobSplit.EMPTY_TASK_SPLIT;
+cleanup[0] = new TaskInProgress(jobId, jobFile, emptySplit, 
+        jobtracker, conf, this, numMapTasks, 1);
+cleanup[0].setJobCleanupTask();
+// cleanup reduce tip.
+cleanup[1] = new TaskInProgress(jobId, jobFile, numMapTasks,
+                   numReduceTasks, jobtracker, conf, this, 1);
+cleanup[1].setJobCleanupTask();
+</code></pre><hr>
+<p> 6、创建Map和Reduce任务的启动任务，各一个：</p>
+<pre><code>// create two setup tips, one map and one reduce.
+setup = new TaskInProgress[2];
+
+// setup map tip. This map doesn&apos;t use any split. Just assign an empty
+// split.
+setup[0] = new TaskInProgress(jobId, jobFile, emptySplit, 
+        jobtracker, conf, this, numMapTasks + 1, 1);
+setup[0].setJobSetupTask();
+
+// setup reduce tip.
+setup[1] = new TaskInProgress(jobId, jobFile, numMapTasks,
+                   numReduceTasks + 1, jobtracker, conf, this, 1);
+setup[1].setJobSetupTask();
+</code></pre><hr>
+<p> 7、Map/Reduce Task初始化完毕：</p>
+<pre><code>synchronized(jobInitKillStatus){
+  jobInitKillStatus.initDone = true;
+
+  // set this before the throw to make sure cleanup works properly
+  tasksInited = true;
+
+  if(jobInitKillStatus.killed) {
+    throw new KillInterruptedException(&quot;Job &quot; + jobId + &quot; killed in init&quot;);
+  }
+}
+</code></pre><p>初始化完毕后，会通过jobUpdated进行通知。Job更新的事件主要有三种：</p>
+<pre><code>static enum EventType {RUN_STATE_CHANGED, START_TIME_CHANGED, PRIORITY_CHANGED}
+</code></pre><p>此时初始化完毕属于RUN_STATE_CHANGED。从其代码来看，如果是运行状态改变，并不执行什么操作：</p>
+<pre><code>public synchronized void jobUpdated(JobChangeEvent event) {
+  JobInProgress job = event.getJobInProgress();
+  if (event instanceof JobStatusChangeEvent) {
+    // Check if the ordering of the job has changed
+    // For now priority and start-time can change the job ordering
+    JobStatusChangeEvent statusEvent = (JobStatusChangeEvent)event;
+    JobSchedulingInfo oldInfo =  
+      new JobSchedulingInfo(statusEvent.getOldStatus());
+    if (statusEvent.getEventType() == EventType.PRIORITY_CHANGED 
+        || statusEvent.getEventType() == EventType.START_TIME_CHANGED) {
+      // Make a priority change
+      reorderJobs(job, oldInfo);
+    } else if (statusEvent.getEventType() == EventType.RUN_STATE_CHANGED) {
+      // Check if the job is complete
+      int runState = statusEvent.getNewStatus().getRunState();
+      if (runState == JobStatus.SUCCEEDED
+          || runState == JobStatus.FAILED
+          || runState == JobStatus.KILLED) {
+        jobCompleted(oldInfo);
+      }
+    }
+  }
+}
+</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/10/10/Job提交的过程/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Job提交的过程</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Job的MapReduce Task初始化" data-title="Job的Map/Reduce Task初始化" data-url="http://yoursite.com/2015/10/12/Job的MapReduce Task初始化/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2016 Oylwhu Blog
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

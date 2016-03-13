@@ -4,17 +4,22 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>Oylwhu Blog</title>
+  <title>Job提交的过程 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oylwhu Blog">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
+1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Job提交的过程">
+<meta property="og:url" content="http://yoursite.com/2015/10/10/Job提交的过程/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description">
+<meta property="og:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
+1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
+<meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Kuangjia4.jpg">
+<meta property="og:updated_time" content="2016-03-13T09:44:45.416Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Oylwhu Blog">
-<meta name="twitter:description">
+<meta name="twitter:title" content="Job提交的过程">
+<meta name="twitter:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
+1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -159,433 +164,7 @@
 	</div>
 </nav>
 
-      <div class="body-wrap">
-  
-    <article id="post-Job的MapReduce Task初始化" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/10/12/Job的MapReduce Task初始化/" class="article-date">
-  	<time datetime="2015-10-12T12:32:10.000Z" itemprop="datePublished">2015-10-12</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/12/Job的MapReduce Task初始化/">Job的Map/Reduce Task初始化</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html" target="_blank" rel="external">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。</p>
-<pre><code>public void initJob(JobInProgress job) {
-  if (null == job) {
-    LOG.info(&quot;Init on null job is not valid&quot;);
-    return;
-  }
-
-  try {
-    JobStatus prevStatus = (JobStatus)job.getStatus().clone();
-    LOG.info(&quot;Initializing &quot; + job.getJobID());
-    job.initTasks();
-    // Inform the listeners if the job state has changed
-    // Note : that the job will be in PREP state.
-    JobStatus newStatus = (JobStatus)job.getStatus().clone();
-    if (prevStatus.getRunState() != newStatus.getRunState()) {
-      JobStatusChangeEvent event = 
-        new JobStatusChangeEvent(job, EventType.RUN_STATE_CHANGED, prevStatus, 
-            newStatus);
-      synchronized (JobTracker.this) {
-        updateJobInProgressListeners(event);
-      }
-    }
-  } catch (KillInterruptedException kie) {
-    //   If job was killed during initialization, job state will be KILLED
-    LOG.error(&quot;Job initialization interrupted:\n&quot; +
-        StringUtils.stringifyException(kie));
-    killJob(job);
-  } catch (Throwable t) {
-    String failureInfo = 
-      &quot;Job initialization failed:\n&quot; + StringUtils.stringifyException(t);
-    // If the job initialization is failed, job state will be FAILED
-    LOG.error(failureInfo);
-    job.getStatus().setFailureInfo(failureInfo);
-    failJob(job);
-  }
-}
-</code></pre><p>可以看出，先进行 job.initTasks()，初始化Map和Reduce任务，之后更新所有</p>
-<pre><code>synchronized (JobTracker.this) {
-  updateJobInProgressListeners(event);
-}
-</code></pre><p>Map/Reduce Task初始化完毕是一个事件，下面的代码进行消息通知：</p>
-<pre><code>// Update the listeners about the job
-// Assuming JobTracker is locked on entry.
-private void updateJobInProgressListeners(JobChangeEvent event) {
-  for (JobInProgressListener listener : jobInProgressListeners) {
-    listener.jobUpdated(event);
-  }
-}
-</code></pre><p>可见，在Job放入队列时使用的是jobAdded，此时使用的是jobUpdated。我们在后面再分析jobUpdated后的细节，此时先分析从jobAdded到jobUpdated之间，Job的初始化过程，主要分为几个阶段。</p>
-<p>首先执行的是获取Split信息，这一部分信息事先已经由JobClient上传至HDFS中。</p>
-<hr>
-<p>1、读取Split信息：</p>
-<pre><code>//
-// read input splits and create a map per a split
-//
-TaskSplitMetaInfo[] splits = createSplits(jobId);
-if (numMapTasks != splits.length) {
-  throw new IOException(&quot;Number of maps in JobConf doesn&apos;t match number of &quot; +
-      &quot;recieved splits for job &quot; + jobId + &quot;! &quot; +
-      &quot;numMapTasks=&quot; + numMapTasks + &quot;, #splits=&quot; + splits.length);
-}
-numMapTasks = splits.length;
-</code></pre><p>createSplits方法的代码为：</p>
-<pre><code>TaskSplitMetaInfo[] createSplits(org.apache.hadoop.mapreduce.JobID jobId)
-throws IOException {
-  TaskSplitMetaInfo[] allTaskSplitMetaInfo =
-    SplitMetaInfoReader.readSplitMetaInfo(jobId, fs, jobtracker.getConf(),
-        jobSubmitDir);
-  return allTaskSplitMetaInfo;
-}
-</code></pre><p>即读取job.splitmetainfo文件，获得Split信息：</p>
-<pre><code>public static JobSplit.TaskSplitMetaInfo[] readSplitMetaInfo(
-    JobID jobId, FileSystem fs, Configuration conf, Path jobSubmitDir) 
-throws IOException {
-  long maxMetaInfoSize = conf.getLong(&quot;mapreduce.jobtracker.split.metainfo.maxsize&quot;, 
-      10000000L);
-  Path metaSplitFile = JobSubmissionFiles.getJobSplitMetaFile(jobSubmitDir);
-  FileStatus fStatus = fs.getFileStatus(metaSplitFile);
-  if (maxMetaInfoSize &gt; 0 &amp;&amp; fStatus.getLen() &gt; maxMetaInfoSize) {
-    throw new IOException(&quot;Split metadata size exceeded &quot; +
-        maxMetaInfoSize +&quot;. Aborting job &quot; + jobId);
-  }
-  FSDataInputStream in = fs.open(metaSplitFile);
-  byte[] header = new byte[JobSplit.META_SPLIT_FILE_HEADER.length];
-  in.readFully(header);
-  if (!Arrays.equals(JobSplit.META_SPLIT_FILE_HEADER, header)) {
-    throw new IOException(&quot;Invalid header on split file&quot;);
-  }
-  int vers = WritableUtils.readVInt(in);
-  if (vers != JobSplit.META_SPLIT_VERSION) {
-    in.close();
-    throw new IOException(&quot;Unsupported split version &quot; + vers);
-  }
-  int numSplits = WritableUtils.readVInt(in); //TODO: check for insane values
-  JobSplit.TaskSplitMetaInfo[] allSplitMetaInfo = 
-    new JobSplit.TaskSplitMetaInfo[numSplits];
-  final int maxLocations =
-    conf.getInt(JobSplitWriter.MAX_SPLIT_LOCATIONS, Integer.MAX_VALUE);
-  for (int i = 0; i &lt; numSplits; i++) {
-    JobSplit.SplitMetaInfo splitMetaInfo = new JobSplit.SplitMetaInfo();
-    splitMetaInfo.readFields(in);
-    final int numLocations = splitMetaInfo.getLocations().length;
-    if (numLocations &gt; maxLocations) {
-      throw new IOException(&quot;Max block location exceeded for split: #&quot;  + i +
-            &quot; splitsize: &quot; + numLocations + &quot; maxsize: &quot; + maxLocations);
-    }
-    JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
-        JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
-        splitMetaInfo.getStartOffset());
-    allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
-        splitMetaInfo.getLocations(), 
-        splitMetaInfo.getInputDataLength());
-  }
-  in.close();
-  return allSplitMetaInfo;
-}
-</code></pre><p>涉及读取文件的代码有：</p>
-<pre><code>FSDataInputStream in = fs.open(metaSplitFile);
-byte[] header = new byte[JobSplit.META_SPLIT_FILE_HEADER.length];
-in.readFully(header);
-</code></pre><p>这一部分先读取job.splitmetainfo文件的头部，头部实际上是字符串”META-SPL“，该信息由下面的类指定：</p>
-<pre><code>public class JobSplit {
-  static final int META_SPLIT_VERSION = 1;
-  static final byte[] META_SPLIT_FILE_HEADER;
-
-  static {
-    try {
-      META_SPLIT_FILE_HEADER = &quot;META-SPL&quot;.getBytes(&quot;UTF-8&quot;);
-    } catch (UnsupportedEncodingException u) {
-      throw new RuntimeException(u);
-    }
-  } 
-.......
-</code></pre><p>读取了文件头之后，剩下的是读取版本信息：</p>
-<pre><code>int vers = WritableUtils.readVInt(in);
-if (vers != JobSplit.META_SPLIT_VERSION) {
-  in.close();
-  throw new IOException(&quot;Unsupported split version &quot; + vers);
-}
-</code></pre><p>检查了版本（1）后，接下来就是读取Split的数量：</p>
-<pre><code>int numSplits = WritableUtils.readVInt(in); //TODO: check for insane values
-JobSplit.TaskSplitMetaInfo[] allSplitMetaInfo = 
-  new JobSplit.TaskSplitMetaInfo[numSplits];
-</code></pre><p>并根据Split数量创建JobSplit.TaskSplitMetaInfo数组。接下来对于每个Split，循环读取位置等信息：</p>
-<pre><code>for (int i = 0; i &lt; numSplits; i++) {
-  JobSplit.SplitMetaInfo splitMetaInfo = new JobSplit.SplitMetaInfo();
-  splitMetaInfo.readFields(in);
-  final int numLocations = splitMetaInfo.getLocations().length;
-  if (numLocations &gt; maxLocations) {
-    throw new IOException(&quot;Max block location exceeded for split: #&quot;  + i +
-          &quot; splitsize: &quot; + numLocations + &quot; maxsize: &quot; + maxLocations);
-  }
-  JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
-      JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
-      splitMetaInfo.getStartOffset());
-  allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
-      splitMetaInfo.getLocations(), 
-      splitMetaInfo.getInputDataLength());
-}
-</code></pre><p>在上面的代码中，splitMetaInfo.readFields(in)可以获得位置信息：</p>
-<pre><code>public void readFields(DataInput in) throws IOException {
-  int len = WritableUtils.readVInt(in);
-  locations = new String[len];
-  for (int i = 0; i &lt; locations.length; i++) {
-    locations[i] = Text.readString(in);
-  }
-  startOffset = WritableUtils.readVLong(in);
-  inputDataLength = WritableUtils.readVLong(in);
-}
-</code></pre><p>所谓的位置，实际上就是指这个Split在j哪些服务器的信息。获取到位置、Split数据长度等信息后，全部纪录在对象JobSplit.TaskSplitMetaInfo中：</p>
-<pre><code>JobSplit.TaskSplitIndex splitIndex = new JobSplit.TaskSplitIndex(
-    JobSubmissionFiles.getJobSplitFile(jobSubmitDir).toString(), 
-    splitMetaInfo.getStartOffset());
-allSplitMetaInfo[i] = new JobSplit.TaskSplitMetaInfo(splitIndex, 
-    splitMetaInfo.getLocations(), 
-    splitMetaInfo.getInputDataLength());
-</code></pre><p>返回allSplitMetaInfo数组。</p>
-<hr>
-<p>2、根据Map任务数量创建相同数量的TaskInProgress对象：<br>上面返回的数组大小即纪录了Split的个数，也决定了Map的数量，验证这些服务器的合法性：</p>
-<pre><code>numMapTasks = splits.length;
-// Sanity check the locations so we don&apos;t create/initialize unnecessary tasks
-for (TaskSplitMetaInfo split : splits) {
-  NetUtils.verifyHostnames(split.getLocations());
-}
-</code></pre><p>在监控相关类中设置相应信息：</p>
-<pre><code>jobtracker.getInstrumentation().addWaitingMaps(getJobID(), numMapTasks);
-jobtracker.getInstrumentation().addWaitingReduces(getJobID(), numReduceTasks);
-this.queueMetrics.addWaitingMaps(getJobID(), numMapTasks);
-this.queueMetrics.addWaitingReduces(getJobID(), numReduceTasks);
-</code></pre><p>接下来创建TaskInProgress对象，每个Map都对应于一个TaskInProgress对象：</p>
-<pre><code>maps = new TaskInProgress[numMapTasks];
-for(int i=0; i &lt; numMapTasks; ++i) {
-  inputLength += splits[i].getInputDataLength();
-  maps[i] = new TaskInProgress(jobId, jobFile, 
-                               splits[i], 
-                               jobtracker, conf, this, i, numSlotsPerMap);
-}
-</code></pre><p>TaskInProgress纪录了一个Map Task或Reduce Task运行相关的所有信息，类似于JobInProgress，TaskInProgress的构造函数有两个，分别针对Map和Reduce的，对于Map的：</p>
-<pre><code>/**
- * Constructor for MapTask
- */
-public TaskInProgress(JobID jobid, String jobFile, 
-                      TaskSplitMetaInfo split, 
-                      JobTracker jobtracker, JobConf conf, 
-                      JobInProgress job, int partition,
-                      int numSlotsRequired) {
-  this.jobFile = jobFile;
-  this.splitInfo = split;
-  this.jobtracker = jobtracker;
-  this.job = job;
-  this.conf = conf;
-  this.partition = partition;
-  this.maxSkipRecords = SkipBadRecords.getMapperMaxSkipRecords(conf);
-  this.numSlotsRequired = numSlotsRequired;
-  setMaxTaskAttempts();
-  init(jobid);
-}
-</code></pre><p>splitInfo纪录了当前Split的信息，partition即表示这是第几个Map Task，numSlotsRequired为1.<br>创建好的TaskInProgress将会放入缓存中：</p>
-<pre><code>if (numMapTasks &gt; 0) { 
-  nonRunningMapCache = createCache(splits, maxLevel);
-}
-</code></pre><p>nonRunningMapCache是一个未运行起来的Map任务的关于主机信息等等的缓存，其索引为Node，即服务器；而其值为TaskInProgress对象，其声明为，因此，实际上就是解析Split所在的服务器，缓存下来，供后续调度使用：</p>
-<pre><code>Map&lt;Node, List&lt;TaskInProgress&gt;&gt; nonRunningMapCache;
-</code></pre><p>其方法代码为：</p>
-<pre><code>private Map&lt;Node, List&lt;TaskInProgress&gt;&gt; createCache(
-                               TaskSplitMetaInfo[] splits, int maxLevel)
-                               throws UnknownHostException {
-  Map&lt;Node, List&lt;TaskInProgress&gt;&gt; cache = 
-    new IdentityHashMap&lt;Node, List&lt;TaskInProgress&gt;&gt;(maxLevel);
-
-  Set&lt;String&gt; uniqueHosts = new TreeSet&lt;String&gt;();
-  for (int i = 0; i &lt; splits.length; i++) {
-    String[] splitLocations = splits[i].getLocations();
-    if (splitLocations == null || splitLocations.length == 0) {
-      nonLocalMaps.add(maps[i]);
-      continue;
-    }
-    for(String host: splitLocations) {
-      Node node = jobtracker.resolveAndAddToTopology(host);
-      uniqueHosts.add(host);
-      LOG.info(&quot;tip:&quot; + maps[i].getTIPId() + &quot; has split on node:&quot; + node);
-      for (int j = 0; j &lt; maxLevel; j++) {
-        List&lt;TaskInProgress&gt; hostMaps = cache.get(node);
-        if (hostMaps == null) {
-          hostMaps = new ArrayList&lt;TaskInProgress&gt;();
-          cache.put(node, hostMaps);
-          hostMaps.add(maps[i]);
-        }
-        //check whether the hostMaps already contains an entry for a TIP
-        //This will be true for nodes that are racks and multiple nodes in
-        //the rack contain the input for a tip. Note that if it already
-        //exists in the hostMaps, it must be the last element there since
-        //we process one TIP at a time sequentially in the split-size order
-        if (hostMaps.get(hostMaps.size() - 1) != maps[i]) {
-          hostMaps.add(maps[i]);
-        }
-        node = node.getParent();
-      }
-    }
-  }
-
-  // Calibrate the localityWaitFactor - Do not override user intent!
-  if (localityWaitFactor == DEFAULT_LOCALITY_WAIT_FACTOR) {
-    int jobNodes = uniqueHosts.size();
-    int clusterNodes = jobtracker.getNumberOfUniqueHosts();
-
-    if (clusterNodes &gt; 0) {
-      localityWaitFactor = 
-        Math.min((float)jobNodes/clusterNodes, localityWaitFactor);
-    }
-    LOG.info(jobId + &quot; LOCALITY_WAIT_FACTOR=&quot; + localityWaitFactor);
-  }
-
-  return cache;
-}
-</code></pre><hr>
-<p>3、根据Reduce任务数量创建相同数量的TaskInProgress对象：<br>代码和Map基本相同：</p>
-<pre><code>//
-// Create reduce tasks
-//
-this.reduces = new TaskInProgress[numReduceTasks];
-for (int i = 0; i &lt; numReduceTasks; i++) {
-  reduces[i] = new TaskInProgress(jobId, jobFile, 
-                                  numMapTasks, i, 
-                                  jobtracker, conf, this, numSlotsPerReduce);
-  nonRunningReduces.add(reduces[i]);
-}
-</code></pre><hr>
-<p> 4、计算Reduce任务启动前Map最少应该启动的数量：<br>根据MapReduce原理，先进行Map计算，之后中间结果再传递至Reduce计算，因此，Map要先进行计算，Reduce如果和Map一起启动，那么，Reduce必然先一直处于等待中。这会消耗机器资源，且Shuffle时间比较长。所以，这个值默认是Map所有任务数量的5%：</p>
-<pre><code>// Calculate the minimum number of maps to be complete before 
-// we should start scheduling reduces
-completedMapsForReduceSlowstart = 
-  (int)Math.ceil(
-      (conf.getFloat(&quot;mapred.reduce.slowstart.completed.maps&quot;, 
-                     DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART) * 
-       numMapTasks));
-// ... use the same for estimating the total output of all maps
-resourceEstimator.setThreshhold(completedMapsForReduceSlowstart);
-</code></pre><p>从DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART可以看出，是5%:</p>
-<pre><code>private static float DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART = 0.05f;
-</code></pre><hr>
-<p> 5、创建Map和Reduce任务的清理任务，各一个：</p>
-<pre><code>// create cleanup two cleanup tips, one map and one reduce.
-cleanup = new TaskInProgress[2];
-// cleanup map tip. This map doesn&apos;t use any splits. Just assign an empty
-// split.
-TaskSplitMetaInfo emptySplit = JobSplit.EMPTY_TASK_SPLIT;
-cleanup[0] = new TaskInProgress(jobId, jobFile, emptySplit, 
-        jobtracker, conf, this, numMapTasks, 1);
-cleanup[0].setJobCleanupTask();
-// cleanup reduce tip.
-cleanup[1] = new TaskInProgress(jobId, jobFile, numMapTasks,
-                   numReduceTasks, jobtracker, conf, this, 1);
-cleanup[1].setJobCleanupTask();
-</code></pre><hr>
-<p> 6、创建Map和Reduce任务的启动任务，各一个：</p>
-<pre><code>// create two setup tips, one map and one reduce.
-setup = new TaskInProgress[2];
-
-// setup map tip. This map doesn&apos;t use any split. Just assign an empty
-// split.
-setup[0] = new TaskInProgress(jobId, jobFile, emptySplit, 
-        jobtracker, conf, this, numMapTasks + 1, 1);
-setup[0].setJobSetupTask();
-
-// setup reduce tip.
-setup[1] = new TaskInProgress(jobId, jobFile, numMapTasks,
-                   numReduceTasks + 1, jobtracker, conf, this, 1);
-setup[1].setJobSetupTask();
-</code></pre><hr>
-<p> 7、Map/Reduce Task初始化完毕：</p>
-<pre><code>synchronized(jobInitKillStatus){
-  jobInitKillStatus.initDone = true;
-
-  // set this before the throw to make sure cleanup works properly
-  tasksInited = true;
-
-  if(jobInitKillStatus.killed) {
-    throw new KillInterruptedException(&quot;Job &quot; + jobId + &quot; killed in init&quot;);
-  }
-}
-</code></pre><p>初始化完毕后，会通过jobUpdated进行通知。Job更新的事件主要有三种：</p>
-<pre><code>static enum EventType {RUN_STATE_CHANGED, START_TIME_CHANGED, PRIORITY_CHANGED}
-</code></pre><p>此时初始化完毕属于RUN_STATE_CHANGED。从其代码来看，如果是运行状态改变，并不执行什么操作：</p>
-<pre><code>public synchronized void jobUpdated(JobChangeEvent event) {
-  JobInProgress job = event.getJobInProgress();
-  if (event instanceof JobStatusChangeEvent) {
-    // Check if the ordering of the job has changed
-    // For now priority and start-time can change the job ordering
-    JobStatusChangeEvent statusEvent = (JobStatusChangeEvent)event;
-    JobSchedulingInfo oldInfo =  
-      new JobSchedulingInfo(statusEvent.getOldStatus());
-    if (statusEvent.getEventType() == EventType.PRIORITY_CHANGED 
-        || statusEvent.getEventType() == EventType.START_TIME_CHANGED) {
-      // Make a priority change
-      reorderJobs(job, oldInfo);
-    } else if (statusEvent.getEventType() == EventType.RUN_STATE_CHANGED) {
-      // Check if the job is complete
-      int runState = statusEvent.getNewStatus().getRunState();
-      if (runState == JobStatus.SUCCEEDED
-          || runState == JobStatus.FAILED
-          || runState == JobStatus.KILLED) {
-        jobCompleted(oldInfo);
-      }
-    }
-  }
-}
-</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-Job提交的过程" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-Job提交的过程" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
       <a href="/2015/10/10/Job提交的过程/" class="article-date">
@@ -601,12 +180,23 @@ setup[1].setJobSetupTask();
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/10/Job提交的过程/">Job提交的过程</a>
+    <h1 class="article-title" itemprop="name">
+      Job提交的过程
     </h1>
   
 
       </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
       
     
     <div class="article-entry" itemprop="articleBody">
@@ -1981,559 +1571,77 @@ this.pos = start;
       
     </div>
     
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
   </div>
   
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-MapReduce框架详解" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/10/03/MapReduce框架详解/" class="article-date">
-  	<time datetime="2015-10-03T11:33:02.000Z" itemprop="datePublished">2015-10-03</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
     
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+<nav id="article-nav">
+  
+    <a href="/2015/10/12/Job的MapReduce Task初始化/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/03/MapReduce框架详解/">MapReduce框架详解</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="MapReduce_u6846_u67B6_u8BE6_u89E3"><a href="#MapReduce_u6846_u67B6_u8BE6_u89E3" class="headerlink" title="MapReduce框架详解"></a>MapReduce框架详解</h2><blockquote>
-<p>我现在学习技术很喜欢看图，每次有了新理解就会去看看图，每次都会有新的发现。<br>谈mapreduce运行机制，可以从很多不同的角度来描述，比如说从mapreduce运行流程来讲解，也可以从计算模型的逻辑流程来进行讲解，也许有些深入理解了mapreduce运行机制还会从更好的角度来描述，但是将mapreduce运行机制有些东西是避免不了的，就是一个个参入的实例对象，一个就是计算模型的逻辑定义阶段，我这里讲解不从什么流程出发，就从这些一个个牵涉的对象，不管是物理实体还是逻辑实体。<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Kuangjia1.jpg" alt="MapReduce1"><br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Kuangjia2.jpg" alt="MapReduce2"><br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Kuangjia3.jpg" alt="MapReduce3"><br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Kuangjia4.jpg" alt="MapReduce4"><br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Kuangjia5.jpg" alt="MapReduce5"><br>下面介绍MapReduce的部分参数及其默认设置：<br>（1）InputFormat类<br>该类的作用是将输入的数据分割成一个个的split，并将split进一步拆分成<key, value="">对作为map函数的输入<br>（2）Mapper类<br>实现map函数，根据输入的<key, value="">对生产中间结果<br>（3）Combiner<br>实现combine函数，合并中间结果中具有相同key值的键值对。<br>（4）Partitioner类<br>实现getPartition函数，用于在Shuffle过程按照key值将中间数据分成R份，每一份由一个Reduce负责<br>（5）Reducer类<br>实现reduce函数，将中间结果合并，得到最终的结果<br>（6）OutputFormat类<br>该类负责输出最终的结果<br>首先讲讲物理实体，参入mapreduce作业执行涉及4个独立的实体：<br>（1）客户端（client）：编写mapreduce程序，配置作业，提交作业，这就是程序员完成的工作；<br>（2）JobTracker：初始化作业，分配作业，与TaskTracker通信，协调整个作业的执行；<br>（3）TaskTracker：保持与JobTracker的通信，在分配的数据片段上执行Map或Reduce任务，TaskTracker和JobTracker的不同有个很重要的方面，就是在执行任务时候TaskTracker可以有n多个，JobTracker则只会有一个（JobTracker只能有一个就和hdfs里namenode一样存在单点故障，我会在后面的mapreduce的相关问题里讲到这个问题的）<br>（4）Hdfs：保存作业的数据、配置信息等等，最后的结果也是保存在hdfs上面<br>那么mapreduce到底是如何运行的呢？<br>首先是客户端要编写好mapreduce程序，配置好mapreduce的作业也就是job，接下来就是提交job了，提交job是提交到JobTracker上的，这个时候JobTracker就会构建这个job，具体就是分配一个新的job任务的ID值，接下来它会做检查操作，这个检查就是确定输出目录是否存在，如果存在那么job就不能正常运行下去，JobTracker会抛出错误给客户端，接下来还要检查输入目录是否存在，如果不存在同样抛出错误，如果存在JobTracker会根据输入计算输入分片（Input Split），如果分片计算不出来也会抛出错误，至于输入分片我后面会做讲解的，这些都做好了JobTracker就会配置Job需要的资源了。分配好资源后，JobTracker就会初始化作业，初始化主要做的是将Job放入一个内部的队列，让配置好的作业调度器能调度到这个作业，作业调度器会初始化这个job，初始化就是创建一个正在运行的job对象（封装任务和记录信息），以便JobTracker跟踪job的状态和进程。<br>初始化完毕后，作业调度器会获取输入分片信息（input split），每个分片创建一个map任务。接下来就是任务分配了，这个时候tasktracker会运行一个简单的循环机制定期发送心跳给jobtracker，心跳间隔是5秒，程序员可以配置这个时间，心跳就是jobtracker和tasktracker沟通的桥梁，通过心跳，jobtracker可以监控tasktracker是否存活，也可以获取tasktracker处理的状态和问题，同时tasktracker也可以通过心跳里的返回值获取jobtracker给它的操作指令。任务分配好后就是执行任务了。在任务执行时候jobtracker可以通过心跳机制监控tasktracker的状态和进度，同时也能计算出整个job的状态和进度，而tasktracker也可以本地监控自己的状态和进度。当jobtracker获得了最后一个完成指定任务的tasktracker操作成功的通知时候，jobtracker会把整个job状态置为成功，然后当客户端查询job运行状态时候（注意：这个是异步操作），客户端会查到job完成的通知的。如果job中途失败，mapreduce也会有相应机制处理，一般而言如果不是程序员程序本身有bug，mapreduce错误处理机制都能保证提交的job能正常完成。</key,></key,></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>下面我从逻辑实体的角度讲解mapreduce运行机制，这些按照时间顺序包括：输入分片（input split）、map阶段、combiner阶段、shuffle阶段和reduce阶段。<br>（1）. 输入分片（input split）：在进行map计算之前，mapreduce会根据输入文件计算输入分片（input split），每个输入分片（input split）针对一个map任务，输入分片（input split）存储的并非数据本身，而是一个分片长度和一个记录数据的位置的数组，输入分片（input split）往往和hdfs的block（块）关系很密切，假如我们设定hdfs的块的大小是64mb，如果我们输入有三个文件，大小分别是3mb、65mb和127mb，那么mapreduce会把3mb文件分为一个输入分片（input split），65mb则是两个输入分片（input split）而127mb也是两个输入分片（input split），换句话说我们如果在map计算前做输入分片调整，例如合并小文件，那么就会有5个map任务将执行，而且每个map执行的数据大小不均，这个也是mapreduce优化计算的一个关键点。</p>
-<ol>
-<li>map阶段：就是程序员编写好的map函数了，因此map函数效率相对好控制，而且一般map操作都是本地化操作也就是在数据存储节点上进行；</li>
-<li>combiner阶段：combiner阶段是程序员可以选择的，combiner其实也是一种reduce操作，因此我们看见WordCount类里是用reduce进行加载的。Combiner是一个本地化的reduce操作，它是map运算的后续操作，主要是在map计算出中间文件前做一个简单的合并重复key值的操作，例如我们对文件里的单词频率做统计，map计算时候如果碰到一个hadoop的单词就会记录为1，但是这篇文章里hadoop可能会出现n多次，那么map输出文件冗余就会很多，因此在reduce计算前对相同的key做一个合并操作，那么文件会变小，这样就提高了宽带的传输效率，毕竟hadoop计算力宽带资源往往是计算的瓶颈也是最为宝贵的资源，但是combiner操作是有风险的，使用它的原则是combiner的输入不会影响到reduce计算的最终输入，例如：如果计算只是求总数，最大值，最小值可以使用combiner，但是做平均值计算使用combiner的话，最终的reduce计算结果就会出错。</li>
-<li>shuffle阶段：将map的输出作为reduce的输入的过程就是shuffle了，这个是mapreduce优化的重点地方。这里我不讲怎么优化shuffle阶段，讲讲shuffle阶段的原理，因为大部分的书籍里都没讲清楚shuffle阶段。Shuffle一开始就是map阶段做输出操作，一般mapreduce计算的都是海量数据，map输出时候不可能把所有文件都放到内存操作，因此map写入磁盘的过程十分的复杂，更何况map输出时候要对结果进行排序，内存开销是很大的，map在做输出时候会在内存里开启一个环形内存缓冲区，这个缓冲区专门用来输出的，默认大小是100mb，并且在配置文件里为这个缓冲区设定了一个阀值，默认是0.80（这个大小和阀值都是可以在配置文件里进行配置的），同时map还会为输出操作启动一个守护线程，如果缓冲区的内存达到了阀值的80%时候，这个守护线程就会把内容写到磁盘上，这个过程叫spill，另外的20%内存可以继续写入要写进磁盘的数据，写入磁盘和写入内存操作是互不干扰的，如果缓存区被撑满了，那么map就会阻塞写入内存的操作，让写入磁盘操作完成后再继续执行写入内存操作，前面我讲到写入磁盘前会有个排序操作，这个是在写入磁盘操作时候进行，不是在写入内存时候进行的，如果我们定义了combiner函数，那么排序前还会执行combiner操作。<br> 每次spill操作也就是写入磁盘操作时候就会写一个溢出文件，也就是说在做map输出有几次spill就会产生多少个溢出文件，等map输出全部做完后，map会合并这些输出文件。这个过程里还会有一个Partitioner操作，对于这个操作很多人都很迷糊，其实Partitioner操作和map阶段的输入分片（Input split）很像，一个Partitioner对应一个reduce作业，如果我们mapreduce操作只有一个reduce操作，那么Partitioner就只有一个，如果我们有多个reduce操作，那么Partitioner对应的就会有多个，Partitioner因此就是reduce的输入分片，这个程序员可以编程控制，主要是根据实际key和value的值，根据实际业务类型或者为了更好的reduce负载均衡要求进行，这是提高reduce效率的一个关键所在。到了reduce阶段就是合并map输出文件了，Partitioner会找到对应的map输出文件，然后进行复制操作，复制操作时reduce会开启几个复制线程，这些线程默认个数是5个，程序员也可以在配置文件更改复制线程的个数，这个复制过程和map写入磁盘过程类似，也有阀值和内存大小，阀值一样可以在配置文件里配置，而内存大小是直接使用reduce的tasktracker的内存大小，复制时候reduce还会进行排序操作和合并文件操作，这些操作完了就会进行reduce计算了。</li>
-<li>reduce阶段：和map函数一样也是程序员编写的，最终结果是存储在hdfs上的。<h4 id="Mapreduce_u7684_u76F8_u5173_u95EE_u9898"><a href="#Mapreduce_u7684_u76F8_u5173_u95EE_u9898" class="headerlink" title="Mapreduce的相关问题"></a>Mapreduce的相关问题</h4>这里我要谈谈我学习mapreduce思考的一些问题，都是我自己想出解释的问题，但是某些问题到底对不对，就要广大童鞋帮我确认了。<br>（1）jobtracker的单点故障：jobtracker和hdfs的namenode一样也存在单点故障，单点故障一直是hadoop被人诟病的大问题，为什么hadoop的做的文件系统和mapreduce计算框架都是高容错的，但是最重要的管理节点的故障机制却如此不好，我认为主要是namenode和jobtracker在实际运行中都是在内存操作，而做到内存的容错就比较复杂了，只有当内存数据被持久化后容错才好做，namenode和jobtracker都可以备份自己持久化的文件，但是这个持久化都会有延迟，因此真的出故障，任然不能整体恢复，另外hadoop框架里包含zookeeper框架，zookeeper可以结合jobtracker，用几台机器同时部署jobtracker，保证一台出故障，有一台马上能补充上，不过这种方式也没法恢复正在跑的mapreduce任务。<br>（2）做mapreduce计算时候，输出一般是一个文件夹，而且该文件夹是不能存在，我在出面试题时候提到了这个问题，而且这个检查做的很早，当我们提交job时候就会进行，mapreduce之所以这么设计是保证数据可靠性，如果输出目录存在reduce就搞不清楚你到底是要追加还是覆盖，不管是追加和覆盖操作都会有可能导致最终结果出问题，mapreduce是做海量数据计算，一个生产计算的成本很高，例如一个job完全执行完可能要几个小时，因此一切影响错误的情况mapreduce是零容忍的。<br>（3） Mapreduce还有一个InputFormat和OutputFormat，我们在编写map函数时候发现map方法的参数是之间操作行数据，没有牵涉到InputFormat，这些事情在我们new Path时候mapreduce计算框架帮我们做好了，而OutputFormat也是reduce帮我们做好了，我们使用什么样的输入文件，就要调用什么样的InputFormat，InputFormat是和我们输入的文件类型相关的，mapreduce里常用的InputFormat有FileInputFormat普通文本文件，SequenceFileInputFormat是指hadoop的序列化文件，另外还有KeyValueTextInputFormat。OutputFormat就是我们想最终存储到hdfs系统上的文件格式了，这个根据你需要定义了，hadoop有支持很多文件格式，这里不一一列举，想知道百度下就看到了。</li>
-</ol>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-MapReduce实例浅析" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/10/02/MapReduce实例浅析/" class="article-date">
-  	<time datetime="2015-10-02T07:23:12.000Z" itemprop="datePublished">2015-10-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+          Job的Map/Reduce Task初始化
         
+      </div>
+    </a>
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/02/MapReduce实例浅析/">MapReduce实例浅析</a>
-    </h1>
   
+    <a href="/2015/10/03/MapReduce框架详解/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">MapReduce框架详解</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
 
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="MapReduce_u5B9E_u4F8B_u6D45_u6790"><a href="#MapReduce_u5B9E_u4F8B_u6D45_u6790" class="headerlink" title="MapReduce实例浅析"></a>MapReduce实例浅析</h2><h4 id="1-MapReduce_u6982_u8FF0"><a href="#1-MapReduce_u6982_u8FF0" class="headerlink" title="1.MapReduce概述"></a>1.MapReduce概述</h4><blockquote>
-<p>Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。<br>    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们。框架会对map的输出先进行排序， 然后把结果输入给reduce任务。通常作业的输入和输出都会被存储在文件系统中。 整个框架负责任务的调度和监控，以及重新执行已经失败的任务。<br>    通常，Map/Reduce框架和分布式文件系统是运行在一组相同的节点上的，也就是说，计算节点和存储节点通常在一起。这种配置允许框架在那些已经存好数据的节点上高效地调度任务，这可以使整个集群的网络带宽被非常高效地利用。<br>    Map/Reduce框架由一个单独的master JobTracker 和每个集群节点一个slave TaskTracker共同组成。master负责调度构成一个作业的所有任务，这些任务分布在不同的slave上，master监控它们的执行，重新执行已经失败的任务。而slave仅负责执行由master指派的任务。<br>    应用程序至少应该指明输入/输出的位置（路径），并通过实现合适的接口或抽象类提供map和reduce函数。再加上其他作业的参数，就构成了作业配置（job configuration）。然后，Hadoop的 job client提交作业（jar包/可执行程序等）和配置信息给JobTracker，后者负责分发这些软件和配置信息给slave、调度任务并监控它们的执行，同时提供状态和诊断信息给job-client。<br>虽然Hadoop框架是用Java实现的，但Map/Reduce应用程序则不一定要用 Java来写 。<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili1.jpg" alt="MapReduce处理大数据过程"></p>
-</blockquote>
-<h4 id="2-_u6837_u4F8B_u5206_u6790_uFF1A_u5355_u8BCD_u8BA1_u6570"><a href="#2-_u6837_u4F8B_u5206_u6790_uFF1A_u5355_u8BCD_u8BA1_u6570" class="headerlink" title="2.样例分析：单词计数"></a>2.样例分析：单词计数</h4><blockquote>
-<h5 id="WordCount_u6E90_u7801_u5206_u6790"><a href="#WordCount_u6E90_u7801_u5206_u6790" class="headerlink" title="WordCount源码分析"></a>WordCount源码分析</h5><p>单词计数是最简单也是最能体现MapReduce思想的程序之一，该程序完整的代码可以在Hadoop安装包的src/examples目录下找到<br>单词计数主要完成的功能是：统计一系列文本文件中每个单词出现的次数，如图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce%26%26Shili2.jpg" alt="单词计数"><br>（1）    Map过程<br>Map过程需要继承org.apache.hadoop.mapreduce包中的Mapper类，并重写map方法<br>通过在map方法中添加两句把key值和value值输出到控制台的代码，可以发现map方法中的value值存储的是文本文件中的一行（以回车符作为行结束标记），而key值为该行的首字符相对于文本文件的首地址的偏移量。然后StringTokenizer类将每一行拆分成一个个的单词，并将<word,1>作为map方法的结果输出，其余的工作都交由MapReduce框架处理。其中IntWritable和Text类是Hadoop对int和string类的封装，这些类能够被串行化，以方便在分布式环境中进行数据交换。</word,1></p>
-<p>TokenizerMapper的实现代码如下：</p>
-</blockquote>
-<pre><code>public static class TokenizerMapper extends Mapper&lt;Object, Text, Text, IntWritable&gt;{
-    private final static IntWritable one = new IntWritable(1);
-    private Text word = new Text();
-
-    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-    System.out.println(&quot;key = &quot; + key.toString());
-    //添加查看key值
-    System.out.println(&quot;value = &quot; + value.toString());
-    //添加查看value值
-    StringTokenizer itr = new StringTokenizer(value.toString());
-        while (itr.hasMoreTokens()) {
-            word.set(itr.nextToken());
-            context.write(word, one);
-        }
-    }
-}
-</code></pre><p>（2）    Reduce过程</p>
-<blockquote>
-<p>Reduce过程需要继承org.apache.hadoop.mapreduce包中的Reducer类，并重写reduce方法<br>reduce方法的输入参数key为单个单词，而values是由各Mapper上对应单词的计数值所组成的列表，所以只要遍历values并求和，即可得到某个单词的出现总次数<br>IntSumReduce类的实现代码如下：</p>
-</blockquote>
-<pre><code>public static class TokenizerMapper extends Mapper&lt;Object, Text, Text, IntWritable&gt;{
-    private final static IntWritable one = new IntWritable(1);
-    private Text word = new Text();
-
-    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-    System.out.println(&quot;key = &quot; + key.toString());
-    //添加查看key值
-    System.out.println(&quot;value = &quot; + value.toString());
-    //添加查看value值
-    StringTokenizer itr = new StringTokenizer(value.toString());
-    while (itr.hasMoreTokens()) {
-        word.set(itr.nextToken());
-        context.write(word, one);
-    }
-}
-</code></pre><p>}</p>
-<p>（3）    执行MapReduce任务</p>
-<blockquote>
-<p>在MapReduce中，由Job对象负责管理和运行一个计算任务，并通过Job的一些方法对任务的参数进行相关的设置。此处设置了使用TokenizerMapper完成Map过程和使用的IntSumReduce完成Combine和Reduce过程。还设置了Map过程和Reduce过程的输出类型：key的类型为Text，value的类型为IntWritable。任务的输入和输出路径则由命令行参数指定，并由FileInputFormat和FileOutputFormat分别设定。完成相应任务的参数设定后，即可调用job.waitForCompletion()方法执行任务，主函数实现如下：</p>
-</blockquote>
-<pre><code>public static void main(String[] args) throws Exception {
-Configuration conf = new Configuration();
-String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-if (otherArgs.length != 2) {
-  System.err.println(&quot;Usage: wordcount &lt;in&gt; &lt;out&gt;&quot;);
-  System.exit(2);
-}
-Job job = new Job(conf, &quot;word count&quot;);
-job.setJarByClass(wordCount.class);
-job.setMapperClass(TokenizerMapper.class);
-job.setCombinerClass(IntSumReducer.class);
-job.setReducerClass(IntSumReducer.class);
-job.setOutputKeyClass(Text.class);
-job.setOutputValueClass(IntWritable.class);
-FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
-FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
-System.exit(job.waitForCompletion(true) ? 0 : 1);
-}
-}
-</code></pre><h5 id="WordCount_u5904_u7406_u8FC7_u7A0B"><a href="#WordCount_u5904_u7406_u8FC7_u7A0B" class="headerlink" title="WordCount处理过程"></a>WordCount处理过程</h5><blockquote>
-<p>上面给出了WordCount的设计思路和源码，但是没有深入细节，下面对WordCount进行更加详细的分析：<br>1.将文件拆分成splits，由于测试用的文件较小，所以每一个文件为一个split，并将文件按行分割成<key, value="">对，如图，这一步由Mapreduce框架自动完成，其中偏移量包括了回车所占的字符<br>2.将分割好的<key, value="">对交给用户定义的map方法进行处理，生成新的<key, value="">对<br>3.得到map方法输出的<key, value="">对后，Mapper会将它们按照key值进行排序，并执行Combine过程，将key值相同的value值累加，得到Mapper的最终输出结果，如图：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili3.jpg" alt="Reduce过程"><br>4.Reduce先对从Mapper接收的数据进行排序，再交由用户自定义的reduce方法进行处理，得到新的<key, value="">对，并作为WordCount的输出结果，如图：<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili4.jpg" alt="Reduce输出结果"></key,></key,></key,></key,></key,></p>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hadoop/">hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
   
 </article>
 
 
-
-
-
-
-
-
-
-  
-    <article id="post-TCP窗口滑动以及拥塞控制" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/03/01/TCP窗口滑动以及拥塞控制/" class="article-date">
-  	<time datetime="2015-03-01T02:13:21.000Z" itemprop="datePublished">2015-03-01</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/03/01/TCP窗口滑动以及拥塞控制/">TCP窗口滑动以及拥塞控制</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236"><a href="#TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236" class="headerlink" title="TCP窗口滑动以及拥塞控制"></a>TCP窗口滑动以及拥塞控制</h2><p>TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。</p>
-<blockquote>
-<p>一、滑动窗口协议<br>     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。<br>     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范围称之为“窗口”；2. “滑动”则是指这段“允许发送的范围”是可以随着发送的过程而变化的，方式就是按顺序“滑动”。在引入一个例子来说这个协议之前，我觉得很有必要先了解以下前提：<br>1）TCP协议的两端分别为发送者A和接收者B，由于是全双工协议，因此A和B应该分别维护着一个独立的发送缓冲区和接收缓冲区，由于对等性（A发B收和B发A收），我们以A发送B接收的情况作为例子；<br>2）发送窗口是发送缓存中的一部分，是可以被TCP协议发送的那部分，其实应用层需要发送的所有数据都被放进了发送者的发送缓冲区；<br>3）发送窗口中相关的有四个概念：已发送并收到确认的数据（不再发送窗口和发送缓冲区之内）、已发送但未收到确认的数据（位于发送窗口之中）、允许发送但尚未发送的数据以及发送窗口外发送缓冲区内暂时不允许发送的数据；<br>4）每次成功发送数据之后，发送窗口就会在发送缓冲区中按顺序移动，将新的数据包含到窗口中准备发送；<br>     TCP建立连接的初始，B会告诉A自己的接收窗口大小，比如为‘20’：<br>     字节31-50为发送窗口<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_1.png" alt="TCP窗口滑动以及拥塞控制_1"><br>A发送11个字节后，发送窗口位置不变，B接收到了乱序的数据分组：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_2.png" alt="TCP窗口滑动以及拥塞控制_2"><br>只有当A成功发送了数据，即发送的数据得到了B的确认之后，才会移动滑动窗口离开已发送的数据；同时B则确认连续的数据分组，对于乱序的分组则先接收下来，避免网络重复传递：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_3.png" alt="TCP窗口滑动以及拥塞控制_3"></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>二、流量控制<br>     流量控制方面主要有两个要点需要掌握。一是TCP利用滑动窗口实现流量控制的机制；二是如何考虑流量控制中的传输效率。</p>
-<ol>
-<li>流量控制<br>  所谓流量控制，主要是接收方传递信息给发送方，使其不要发送数据太快，是一种端到端的控制。主要的方式就是返回的ACK中会包含自己的接收窗口的大小，并且利用大小来控制发送方的数据发送：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_4.png" alt="TCP窗口滑动以及拥塞控制_4"><br>这里面涉及到一种情况，如果B已经告诉A自己的缓冲区已满，于是A停止发送数据；等待一段时间后，B的缓冲区出现了富余，于是给A发送报文告诉A我的rwnd大小为400，但是这个报文不幸丢失了，于是就出现A等待B的通知||B等待A发送数据的死锁状态。为了处理这种问题，TCP引入了持续计时器（Persistence timer），当A收到对方的零窗口通知时，就启用该计时器，时间到则发送一个1字节的探测报文，对方会在此时回应自身的接收窗口大小，如果结果仍未0，则重设持续计时器，继续等待。</li>
-<li>传递效率<br>  一个显而易见的问题是：单个发送字节单个确认，和窗口有一个空余即通知发送方发送一个字节，无疑增加了网络中的许多不必要的报文（请想想为了一个字节数据而添加的40字节头部吧！），所以我们的原则是尽可能一次多发送几个字节，或者窗口空余较多的时候通知发送方一次发送多个字节。对于前者我们广泛使用Nagle算法，即：<br>1） 若发送应用进程要把发送的数据逐个字节地送到TCP的发送缓存，则发送方就把第一个数据字节先发送出去，把后面的字节先缓存起来；<br>2）当发送方收到第一个字节的确认后（也得到了网络情况和对方的接收窗口大小），再把缓冲区的剩余字节组成合适大小的报文发送出去；<br>3） 当到达的数据已达到发送窗口大小的一半或以达到报文段的最大长度时，就立即发送一个报文段；<br>  对于后者我们往往的做法是让接收方等待一段时间，或者接收方获得足够的空间容纳一个报文段或者等到接受缓存有一半空闲的时候，再通知发送方发送数据。</li>
-</ol>
-</blockquote>
-<hr>
-<blockquote>
-<p>三、拥塞控制<br>     网络中的链路容量和交换结点中的缓存和处理机都有着工作的极限，当网络的需求超过它们的工作极限时，就出现了拥塞。拥塞控制就是防止过多的数据注入到网络中，这样可以使网络中的路由器或链路不致过载。常用的方法就是：</p>
-<ol>
-<li>慢开始、拥塞控制</li>
-<li>快重传、快恢复<br>  一切的基础还是慢开始，这种方法的思路是这样的：<br>1） 发送方维持一个叫做“拥塞窗口”的变量，该变量和接收端口共同决定了发送者的发送窗口；<br>2） 当主机开始发送数据时，避免一下子将大量字节注入到网络，造成或者增加拥塞，选择发送一个1字节的试探报文；<br>3）当收到第一个字节的数据的确认后，就发送2个字节的报文；<br>4） 若再次收到2个字节的确认，则发送4个字节，依次递增2的指数级；<br>5）最后会达到一个提前预设的“慢开始门限”，比如24，即一次发送了24个分组，此时遵循下面的条件判定：<br>cwnd &lt; ssthresh， 继续使用慢开始算法；<br>cwnd &gt; ssthresh，停止使用慢开始算法，改用拥塞避免算法；<br>cwnd = ssthresh，既可以使用慢开始算法，也可以使用拥塞避免算法；<br>6） 所谓拥塞避免算法就是：每经过一个往返时间RTT就把发送方的拥塞窗口+1，即让拥塞窗口缓慢地增大，按照线性规律增长；<br>7）当出现网络拥塞，比如丢包时，将慢开始门限设为原先的一半，然后将cwnd设为1，执行慢开始算法（较低的起点，指数级增长）；<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_5.png" alt="TCP窗口滑动以及拥塞控制_5"><br>上述方法的目的是在拥塞发生时循序减少主机发送到网络中的分组数，使得发生拥塞的路由器有足够的时间把队列中积压的分组处理完毕。慢开始和拥塞控制算法常常作为一个整体使用，而快重传和快恢复则是为了减少因为拥塞导致的数据包丢失带来的重传时间，从而避免传递无用的数据到网络。快重传的机制是：<br>1） 接收方建立这样的机制，如果一个包丢失，则对后续的包继续发送针对该包的重传请求；<br>2） 一旦发送方接收到三个一样的确认，就知道该包之后出现了错误，立刻重传该包；<br>3）此时发送方开始执行“快恢复”算法：<br>慢开始门限减半；<br>cwnd设为慢开始门限减半后的数值；<br>执行拥塞避免算法（高起点，线性增长）；<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_6.png" alt="TCP窗口滑动以及拥塞控制_6"></li>
-</ol>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
 	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
 
 
 
 
 
 
-
-
-
-  
-    <article id="post-TCP连接的建立和终止" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/02/27/TCP连接的建立和终止/" class="article-date">
-  	<time datetime="2015-02-27T03:34:10.000Z" itemprop="datePublished">2015-02-27</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/02/27/TCP连接的建立和终止/">TCP连接的建立和终止</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="TCP_u8FDE_u63A5_u7684_u5EFA_u7ACB_u548C_u7EC8_u6B62"><a href="#TCP_u8FDE_u63A5_u7684_u5EFA_u7ACB_u548C_u7EC8_u6B62" class="headerlink" title="TCP连接的建立和终止"></a>TCP连接的建立和终止</h2><blockquote>
-<p>以下给出了一个基本TCP客户和服务器程序的套接口函数。<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_1.jpg" alt="TCP连接的建立和终止_1"><br>    先从服务器端说起。服务器端先调用socket函数(返回一个套接字)，然后套接字与地址、端口绑定(bind)，对端口进行监听（listen），调用accept阻塞，等待客户端连接。在这时如果有个客户端调用socket函数，然后连接服务器（connect），如果连接成功，这时客户端与服务器端的连接就建立了。客户端发送数据请求，服务器端接收请求并处理请求，然后把响应数据发送给客户端，客户端读取数据，最后关闭连接，一次交互结束。<br>一、TCP包的首部<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_2.jpg" alt="TCP连接的建立和终止_2"><br>1)若不计选项字段，TCP的首部占20个字节。<br>2)源端口号以及目的端口号用于寻找发端和接收端的进程，一般来讲，通过端口号和IP地址，可以唯一确定一个TCP连接，在网络编程中，通常被称为一个socket接口。<br>3)序号是用来标识从TCP发端向TCP接收端发送的数据字节流。<br>4)确认序号包含发送确认的一端所期望收到的下一个序号，因此，确认序号应该是上次已经成功收到数据字节序号加1.<br>5)首部长度指出了TCP首部的长度值，若不存在选项，则这个值为20字节。<br>6)下表给出了了TCP连接过程中的一些名词的意义。<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_3.png" alt="TCP连接的建立和终止_3"><br>TCP提供解决方式是为了使一端告诉另外一端某些“紧急数据”已经放置在普通的数据流中，让接收端对紧急数据做特别处理。此时，URG位被置为1，并且16位的紧急数据被置为一个正的偏移量，通过此偏移量与TCP首部中的序号字段相加，可以得出紧急数据的最后一个字节的序号，常见的应用有传输中断键（在通过telnet连接过程中）。<br>    RST: 复位字段被用于当一个报文发送到某个socket接口而出现错误时，TCP则会发出复位报文段。常见出现的情况有以下几种：<br>    发送到不存在的端口的连接请求：此时对方的目的端口并没有侦听，对于UDP，将会发出ICMP不可达的   错误信息，而对于TCP，将会发出设置RST复位标志位的数据报。异常终止一个连接：正常情况下，通过发送FIN去正常关闭一个TCP连接，但也有可能通过发送一个复位   报文段去中途释放掉一个连接。在socketAPI中通过设置socket选 项SO_LINGER去关闭这种异常关闭的情况。<br>二、三次握手建立连接详解<br>    我们知道TCP连接要进行“三次握手”，即交换三个分节。大致流程如下：<br>    1）客户端向服务器发送一个SYN J；<br>    2）服务器端想客户端响应一个SYN K，并对SYN J进行确认ACK J+1；<br>    3）客户端再向服务器发一个确认ACK K+1.<br>    这样就完成了三次握手，但是这个三次握手发生在套接口的哪几个函数呢？请看下图：<br>    <img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_4.png" alt="TCP连接的建立和终止_4"><br> 从图中可以看出，服务器必须准备好接受外来的连接。这通过socket、bind和listen函数来完成，称为被动打开。<br>    客户端通过调用connect进行主动打开。这引起客户端向服务器发送SYN J（表示同步，它告诉服务器将在连接中发送的数据的初始序列号）分节，这时connect进入阻塞状态。<br>    服务器监听到连接请求，即收到SYN J分节，调用accept函数接受请求，并向客户端发送SYN K（它告诉客户端服务器将在连接中发送的数据的初始化序列号）、ACK J+1分节，这时accept进入阻塞状态。<br>    客户端收到服务器端的SYN K、ACK J+1分节后，这时connect返回，并对SYN K分节进行确认；服务器接收到ACK K+1分节时，accept的返回，至此三次握手完毕，连接建立。<br>    总结：客户端的connect在三次握手的第二次返回，而服务器端的accept在三次握手的第三次返回。<br>    问题：TCP为什么不采用二次握手而采用三次握手？<br>    采用三次握手是为了防止失效的连接请求报文突然又传到服务器，从而发生错误。当客户发出的里阿尼额请求由于某些原因没有及时到达服务器，而客户在等待一段时间后重新向服务器发送连接请求，且建立成功，顺序完成数据传输，那么第一次发送的连接请求报文段称为失效的连接请求报文段。<br>    考虑这样一种特殊情况，客户端第一次发送的连接请求并没有丢失，而是因为网络问题导致延迟到达服务器，服务器以为是客户端有发起的新连接，于是连接服务器统一连接，并向服务端发回确认，但是此时客户端不予理会，服务器就一直等待客户发送数据，导致服务器的资源浪费。<br>三、四次挥手释放连接详解<br> 建立一个连接需要三次握手，而终止一个连接要经过4次挥手。由于TCP的半封闭（half-close）造成的。既然一个TCP连接是全双工（即数据在两个方向是哪个能同时传递），因此每个方向必须单独地进行关闭。现在我们接受TCP的四次挥手释放连接过程，如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_5.jpg" alt="TCP连接的建立和终止_5"><br>具体步骤：<br>1）某个应用进程首先调用close，我们称这一端执行主动关闭。这一端的TCP于是发送一个FIN分节，表示数据发送完毕；<br>2）另一端接收到FIN分节之后，执行被动关闭，对这个FIN进行确认。它的接收也作为文件结束符传递给接收端应用进程，因为FIN的接收意味着应用进程在相应的连接上再也接收不到额外数据；<br>3）一段时间之后，接收到文件结束符的应用进程调用close关闭它的套接口。这导致它 的TCP也发送一个FIN：<br>4）接收到这个FIN的原发送端TCP（即执行主动关闭的那一端）对它进行确认。<br>    这样每个方向上都有一个FIN和ACK，所以一共需要四个分节。我们使用限定词“一般”是因为：优势步骤1）的FIN随数据一起发送；另外，执行被动关闭那一端的TCP在步骤2）和步骤3）发出的ACK与FIN也可以合并成一个分节。<br>    TCP关闭时，每一端都要发送一个FIN。这种情况除了在应用进程调用close时会发生，还会在进程终止时发生。进程终止包括自愿（调用exit或从main函数返回）、不自愿（进程收到一个终止本进程的信号）的情况，进程终止时所有打开的TCP连接都会发出一个FIN。<br>    上图是客户端执行主动关闭，然而不管是客户端还是服务器端都可以执行主动关闭。通常情况下式客户端主动关闭，但某次额协议如HTTP则是服务端执行主动关闭。<br>    问题：TCP为何采用四次挥手来释放连接。<br>    关闭连接时，当收到对方的FIN报文通知时，它仅仅表示对方内有数据发送给你了，但未必你所有的数据都发送给对方了，所以你未必会马上关闭socket，也即你可能还需要发送一些数据给对方之后，再发送FIN报文给对方来表示你没有数据发送给对方了，针对每个FIN报文，都需要一次ack报文，故需要四次挥手。<br>四、TCP的状态变迁图<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_6.jpg" alt="TCP连接的建立和终止_6"><br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%BB%BA%E7%AB%8B%E5%92%8C%E7%BB%88%E6%AD%A2_7.jpg" alt="TCP连接的建立和终止_7"><br>几个状态解析：<br>1)TIME_WAIT状态<br>这种状态也称为2MSL等待状态，MSL即一个报文段的最长生存时间，也就是报文在网络中被丢弃前的最长时间。那么为什么需要等待2倍的MSL呢？这是因为在TIME_WAIT状态之后，需要执行主动关闭，发送ACK，同时还需要加上一倍的MSL，为了等待对方的反馈结果（是否收到重发的FIN），这是因为再发送ACK之后，可能因为诸多原因而导致ACK发送失败，此时Server端会在此发送FIN。<br>正常情况下，client在2MSL期间，对应的socket是不能再被使用的，但是在具体的实现中（如伯克利），则可以通过SO_REUSEADDR选项重用此接口。<br>2)FIN_WAIT_2状态<br>当对方对自己发送的FIN进行了确认，此时将进入FIN_WAIT_2状态。<br>3) CLOSE_WAIT状态与FIN_WAIT_1状态<br>当连接中的一方收到对方发过来的FIN时，它将进入CLOSE_WAIT状态，而另一端则进入FIN_WAIT_1状态。</p>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="Job提交的过程" data-title="Job提交的过程" data-url="http://yoursite.com/2015/10/10/Job提交的过程/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
 
 
 
 
-
-
-
-
-
-  
-    <article id="post-VLAN" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/02/20/VLAN/" class="article-date">
-  	<time datetime="2015-02-20T02:13:09.000Z" itemprop="datePublished">2015-02-20</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/02/20/VLAN/">VLAN</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="VLAN"><a href="#VLAN" class="headerlink" title="VLAN"></a>VLAN</h2><blockquote>
-<p>概念：VLAN（Virtual Local Area Network）<br>作用：隔离业务；分割广播域<br>默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN1.png" alt="VLAN隔离业务"><br>如：192.168.10.0/24 192.168.20.0/24<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN2.png" alt="VLAN分割广播域"><br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN3.png" alt="Dot1Q以太网帧格式"><br>VLAN的区分：<br>    在源地址和长度/类型字节之间插入长度为4字节的802.1Q帧头。<br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN4.png" alt="Dot1Q帧抓包"><br><img src="http://7xract.com1.z0.glb.clouddn.com/3_VLAN5.png" alt="相同VLAN可以互访"><br><a href="http://edu.51cto.com/lesson/id-20980.html" target="_blank" rel="external">“VLAN”视频播放地址</a></p>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-Route" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/02/19/Route/" class="article-date">
-  	<time datetime="2015-02-19T13:05:19.000Z" itemprop="datePublished">2015-02-19</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/02/19/Route/">路由器工作原理及数据流分析</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790"><a href="#u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790" class="headerlink" title="路由器工作原理及数据流分析"></a>路由器工作原理及数据流分析</h2><blockquote>
-<p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br>当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。<br>当不在同网段时，将数据包发送给默认网关，由网关进行三层转发。<br>“与”运算时用的是自己的掩码。如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png" alt="主机通信原理测试"></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>三层转发过程：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png" alt="三层转发过程"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route4.png" alt="步骤一"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route5.png" alt="步骤二"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route6.png" alt="步骤三"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route7.png" alt="步骤四"><br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png" alt="步骤五"><br>TTL是 Time To Live的缩写，该字段指定IP包被路由器丢弃之前允许通过的最大网段数量。TTL是IPv4包头的一个8 bit字段。TTL的作用是限制IP数据包在计算机网络中的存在的时间。TTL的最大值是255，TTL的一个推荐值是64。虽然TTL从字面上翻译，是可以存活的时间，但实际上TTL是IP数据包在计算机网络中可以转发的最大跳数。TL字段由IP数据包的发送者设置，在IP数据包从源到目的的整个转发路径上，每经过一个路由器，路由器都会修改这个TTL字段值，具体的做法是把该TTL的值减1，然后再将IP包转发出去。如果在IP包到达目的IP之前，TTL减少为0，路由器将会丢弃收到的TTL=0的IP包并向IP包的发送者发送 ICMP time exceeded消息。<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png" alt="步骤六"></p>
-</blockquote>
-<hr>
-<blockquote>
-<p>电脑的ARP表：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png" alt="电脑ARP表"><br>可以看到局域网内广播和组播的地址，以及联系过的电脑主机。<br><a href="http://edu.51cto.com/lesson/id-20964.html" target="_blank" rel="external">“路由器工作原理及数据流分析”视频播放地址</a></p>
-</blockquote>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-Net&amp;&amp;Switsh" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/01/17/Net&&Switsh/" class="article-date">
-  	<time datetime="2015-01-17T08:08:21.000Z" itemprop="datePublished">2015-01-17</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/01/17/Net&&Switsh/">网络三要素及交换机工作原理</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="u7F51_u7EDC_u4E09_u8981_u7D20_u53CA_u4EA4_u6362_u673A_u5DE5_u4F5C_u539F_u7406"><a href="#u7F51_u7EDC_u4E09_u8981_u7D20_u53CA_u4EA4_u6362_u673A_u5DE5_u4F5C_u539F_u7406" class="headerlink" title="网络三要素及交换机工作原理"></a>网络三要素及交换机工作原理</h2><blockquote>
-<p><img src="http://7xract.com1.z0.glb.clouddn.com/1_Net%26%26Switsh1.png" alt="网络三要素"><br>网络三要素：终端、介质、网络设备<br>终端：电脑、手机等。<br>介质：网线、wifi、光纤等。<br>网络设备：路由器、交换机、防火墙、负载均衡设备等。</p>
-</blockquote>
-<ol>
-<li><p>交换机工作原理</p>
-<blockquote>
-<p>HUB与Switch内部构造对比：<br><img src="http://7xract.com1.z0.glb.clouddn.com/1_Net%26%26Switsh2.png" alt="HUB与Switch内部构造对比"><br>外形相似，HUB利用总线发送数据，直接广播。采用CSMA/CD（Carrier Sense Multiple Access with Collision Detection）即带冲突检测的载波监听多路访问技术。CSMA/CD的工作原理是: 若信道空闲，发送数据。若忙碌，则等待信道数据传输结束后再发送数据；若冲突,则停止发送数据，等待再重新尝试。缺点：效率不高。交换机利用交换矩阵发送数据，根据mac地址发送数据。</p>
-</blockquote>
-</li>
-<li><p>交换机的学习功能</p>
-<blockquote>
-<p><img src="http://7xract.com1.z0.glb.clouddn.com/1_Net%26%26Switsh1.png" alt="网络三要素"><br>开始交换机中的MAC地址为空。<br>如E0开始传输数据，则MAC地址表写入E0：0260.8C01.1111。即交换机对于收到的帧，学习其源MAC地址放入MAC地址表。<br>接着，交换机根据收到的帧中间的目的MAC地址，查找MAC地址表进行转发：<br>—　如果匹配，则从相应的端口转发出去（除FCS外，不做改动），只改变FCS。<br>侦校验和：<br>Frame Check Sequence:<br>这个字段包括4字节循环冗余校检码(CRC)用于检查错误.当一个原站组装一个 MAC帧，他在所有字节(从Destination MAC Address到Pad字段)执行一个CRC 计算，原站将计算的结果放入这个字段，并作为帧的一部分传输给目的站， 当帧被目的站接受后，目的站进行同样的校检，如果校检和同字段中的值不同，目的站将认为在传输中发生错误并丢弃这个帧.<br>—　如果没有匹配，则泛洪（flooding），除了源端口外向所有端口转发。此时，B、D发现MAC地址不匹配，丢弃数据帧。C接收数据帧，并回复A，交换机学习C的MAC地址。<br>广播帧：目的MAC地址：FFFF.FFFF.FFFF，传给LAN中所有设备。<br>组播帧：通常用于IP组播的以太网的组播地址以0100.5E或0100.5F开头，这些帧发送给LAN中的一组设备，而不是全部。<br><img src="http://7xract.com1.z0.glb.clouddn.com/1_Net%26%26Switsh4.png" alt="组播帧的处理"><br>交换机内部交换方式：<br>直接转发：交换机检测到目标MAC地址后即转发帧。（快，错误率较高）<br>存储转发：收到完整的帧并检查无错误后才转发。（最常用，慢，正确率高）<br>无碎片转发：交换机检测到帧的前64字节（实验得出）后即转发。（折中）<br><a href="http://edu.51cto.com/lesson/id-20656.html" target="_blank" rel="external">“网络三要素及交换机工作原理”视频播放地址</a></p>
-</blockquote>
-</li>
-</ol>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/学习笔记/">学习笔记</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-  
 </div>
       <footer id="footer">
   <div class="outer">
@@ -2557,8 +1665,8 @@ System.exit(job.waitForCompletion(true) ? 0 : 1);
 		fancybox: true,
 		mathjax: true,
 		animate: true,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
