@@ -14,7 +14,7 @@ p">
 <meta property="og:site_name" content="Oylwhu Blog">
 <meta property="og:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。
 p">
-<meta property="og:updated_time" content="2016-03-13T09:57:39.015Z">
+<meta property="og:updated_time" content="2016-03-21T12:43:05.647Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Job的Map/Reduce Task初始化">
 <meta name="twitter:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。
@@ -567,7 +567,7 @@ setup[1].setJobSetupTask();
     }
   }
 }
-</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。</p>
+</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。<br><a id="more"></a></p>
 
       
     </div>

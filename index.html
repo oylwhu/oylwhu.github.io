@@ -187,7 +187,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html" target="_blank" rel="external">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。</p>
+        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。</p>
 <pre><code>public void initJob(JobInProgress job) {
   if (null == job) {
     LOG.info(&quot;Init on null job is not valid&quot;);
@@ -554,8 +554,7 @@ setup[1].setJobSetupTask();
     }
   }
 }
-</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。</p>
-
+</code></pre><p>因为此时Job并未结束。从此可以看出，Job在初始化完毕后，线程池又去执行其他Job的初始化等操作，等待TaskTracker来取。<br>
       
     </div>
     
@@ -568,6 +567,10 @@ setup[1].setJobSetupTask();
 
       
 
+      
+        <p class="article-more-link">
+          <a  href="/2015/10/12/Job的MapReduce Task初始化/#more">more >></a>
+        </p>
       
       <div class="clearfix"></div>
     </div>
