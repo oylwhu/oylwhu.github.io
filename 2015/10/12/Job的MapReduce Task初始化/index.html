@@ -6,16 +6,16 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <title>Job的Map/Reduce Task初始化 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
+  <meta name="description" content="【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Job的Map/Reduce Task初始化">
 <meta property="og:url" content="http://yoursite.com/2015/10/12/Job的MapReduce Task初始化/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
-<meta property="og:updated_time" content="2016-03-21T12:52:47.161Z">
+<meta property="og:description" content="【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
+<meta property="og:updated_time" content="2016-03-21T13:02:46.438Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Job的Map/Reduce Task初始化">
-<meta name="twitter:description" content="Job的Map/Reduce Task初始化【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
+<meta name="twitter:description" content="【转】原文上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -197,7 +197,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html" target="_blank" rel="external">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。<br><a id="more"></a><br>      public void initJob(JobInProgress job) {<br>        if (null == job) {<br>          LOG.info(“Init on null job is not valid”);<br>          return;<br>        }</p>
+        <p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html" target="_blank" rel="external">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。<br><a id="more"></a><br>      public void initJob(JobInProgress job) {<br>        if (null == job) {<br>          LOG.info(“Init on null job is not valid”);<br>          return;<br>        }</p>
 <pre><code>  try {
     JobStatus prevStatus = (JobStatus)job.getStatus().clone();
     LOG.info(&quot;Initializing &quot; + job.getJobID());

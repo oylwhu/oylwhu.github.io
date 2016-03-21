@@ -187,7 +187,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="Job_u7684Map/Reduce_Task_u521D_u59CB_u5316"><a href="#Job_u7684Map/Reduce_Task_u521D_u59CB_u5316" class="headerlink" title="Job的Map/Reduce Task初始化"></a>Job的Map/Reduce Task初始化</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。<br>
+        <p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917252.html">原文</a><br>上一节分析了Job由JobClient提交到JobTracker的流程，利用RPC机制，JobTracker接收到Job ID和Job所在HDFS的目录，够早了JobInProgress对象，丢入队列，另一个线程从队列中取出JobInProgress对象，并丢入线程池中执行，执行JobInProgress的initJob方法，我们逐步分析。<br>
       
     </div>
     
@@ -247,7 +247,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="Job_u63D0_u4EA4_u7684_u8FC7_u7A0B"><a href="#Job_u63D0_u4EA4_u7684_u8FC7_u7A0B" class="headerlink" title="Job提交的过程"></a>Job提交的过程</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917213.html">原文</a><br>在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？<br>
+        <p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917213.html">原文</a><br>在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？<br>
       
     </div>
     
@@ -307,7 +307,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="MapReduce_u6846_u67B6_u8BE6_u89E3"><a href="#MapReduce_u6846_u67B6_u8BE6_u89E3" class="headerlink" title="MapReduce框架详解"></a>MapReduce框架详解</h2><blockquote>
+        <blockquote>
 <p>我现在学习技术很喜欢看图，每次有了新理解就会去看看图，每次都会有新的发现。<br>谈mapreduce运行机制，可以从很多不同的角度来描述，比如说从mapreduce运行流程来讲解，也可以从计算模型的逻辑流程来进行讲解，也许有些深入理解了mapreduce运行机制还会从更好的角度来描述，但是将mapreduce运行机制有些东西是避免不了的，就是一个个参入的实例对象，一个就是计算模型的逻辑定义阶段，我这里讲解不从什么流程出发，就从这些一个个牵涉的对象，不管是物理实体还是逻辑实体。<br>
       
     </div>
@@ -368,7 +368,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="MapReduce_u5B9E_u4F8B_u6D45_u6790"><a href="#MapReduce_u5B9E_u4F8B_u6D45_u6790" class="headerlink" title="MapReduce实例浅析"></a>MapReduce实例浅析</h2><h4 id="1-MapReduce_u6982_u8FF0"><a href="#1-MapReduce_u6982_u8FF0" class="headerlink" title="1.MapReduce概述"></a>1.MapReduce概述</h4><blockquote>
+        <h4 id="1-MapReduce_u6982_u8FF0"><a href="#1-MapReduce_u6982_u8FF0" class="headerlink" title="1.MapReduce概述"></a>1.MapReduce概述</h4><blockquote>
 <p>Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。<br>
       
     </div>
@@ -429,7 +429,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236"><a href="#TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236" class="headerlink" title="TCP窗口滑动以及拥塞控制"></a>TCP窗口滑动以及拥塞控制</h2><p>TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。</p>
+        <p>TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。</p>
 <blockquote>
 <p>一、滑动窗口协议<br>     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。<br>
       
@@ -491,7 +491,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="TCP_u8FDE_u63A5_u7684_u5EFA_u7ACB_u548C_u7EC8_u6B62"><a href="#TCP_u8FDE_u63A5_u7684_u5EFA_u7ACB_u548C_u7EC8_u6B62" class="headerlink" title="TCP连接的建立和终止"></a>TCP连接的建立和终止</h2><blockquote>
+        <blockquote>
 <p>以下给出了一个基本TCP客户和服务器程序的套接口函数。<br>
       
     </div>
@@ -552,7 +552,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="VLAN"><a href="#VLAN" class="headerlink" title="VLAN"></a>VLAN</h2><blockquote>
+        <blockquote>
 <p>概念：VLAN（Virtual Local Area Network）<br>作用：隔离业务；分割广播域<br>默认情况下，交换机自带VLAN1，所有的端口都属于VLAN1。<br>
       
     </div>
@@ -613,7 +613,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790"><a href="#u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790" class="headerlink" title="路由器工作原理及数据流分析"></a>路由器工作原理及数据流分析</h2><blockquote>
+        <blockquote>
 <p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br>
       
     </div>
@@ -674,7 +674,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="u7F51_u7EDC_u4E09_u8981_u7D20_u53CA_u4EA4_u6362_u673A_u5DE5_u4F5C_u539F_u7406"><a href="#u7F51_u7EDC_u4E09_u8981_u7D20_u53CA_u4EA4_u6362_u673A_u5DE5_u4F5C_u539F_u7406" class="headerlink" title="网络三要素及交换机工作原理"></a>网络三要素及交换机工作原理</h2><blockquote>
+        <blockquote>
 <p><img src="http://7xract.com1.z0.glb.clouddn.com/1_Net%26%26Switsh1.png" alt="网络三要素"><br>网络三要素：终端、介质、网络设备<br>终端：电脑、手机等。<br>介质：网线、wifi、光纤等。<br>网络设备：路由器、交换机、防火墙、负载均衡设备等。<br>
       
     </div>

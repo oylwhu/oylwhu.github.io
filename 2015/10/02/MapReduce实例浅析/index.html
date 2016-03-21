@@ -6,22 +6,22 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <title>MapReduce实例浅析 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="MapReduce实例浅析1.MapReduce概述
+  <meta name="description" content="1.MapReduce概述
 Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MapReduce实例浅析">
 <meta property="og:url" content="http://yoursite.com/2015/10/02/MapReduce实例浅析/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description" content="MapReduce实例浅析1.MapReduce概述
+<meta property="og:description" content="1.MapReduce概述
 Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili1.jpg">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce%26%26Shili2.jpg">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili3.jpg">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Shili4.jpg">
-<meta property="og:updated_time" content="2016-03-21T12:54:52.449Z">
+<meta property="og:updated_time" content="2016-03-21T13:03:19.533Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MapReduce实例浅析">
-<meta name="twitter:description" content="MapReduce实例浅析1.MapReduce概述
+<meta name="twitter:description" content="1.MapReduce概述
 Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
@@ -204,7 +204,7 @@ Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="MapReduce_u5B9E_u4F8B_u6D45_u6790"><a href="#MapReduce_u5B9E_u4F8B_u6D45_u6790" class="headerlink" title="MapReduce实例浅析"></a>MapReduce实例浅析</h2><h4 id="1-MapReduce_u6982_u8FF0"><a href="#1-MapReduce_u6982_u8FF0" class="headerlink" title="1.MapReduce概述"></a>1.MapReduce概述</h4><blockquote>
+        <h4 id="1-MapReduce_u6982_u8FF0"><a href="#1-MapReduce_u6982_u8FF0" class="headerlink" title="1.MapReduce概述"></a>1.MapReduce概述</h4><blockquote>
 <p>Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。<br><a id="more"></a><br>    一个Map/Reduce 作业（job） 通常会把输入的数据集切分为若干独立的数据块，由 map任务（task）以完全并行的方式处理它们。框架会对map的输出先进行排序， 然后把结果输入给reduce任务。通常作业的输入和输出都会被存储在文件系统中。 整个框架负责任务的调度和监控，以及重新执行已经失败的任务。<br>    通常，Map/Reduce框架和分布式文件系统是运行在一组相同的节点上的，也就是说，计算节点和存储节点通常在一起。这种配置允许框架在那些已经存好数据的节点上高效地调度任务，这可以使整个集群的网络带宽被非常高效地利用。<br>    Map/Reduce框架由一个单独的master JobTracker 和每个集群节点一个slave TaskTracker共同组成。master负责调度构成一个作业的所有任务，这些任务分布在不同的slave上，master监控它们的执行，重新执行已经失败的任务。而slave仅负责执行由master指派的任务。<br>    应用程序至少应该指明输入/输出的位置（路径），并通过实现合适的接口或抽象类提供map和reduce函数。再加上其他作业的参数，就构成了作业配置（job configuration）。然后，Hadoop的 job client提交作业（jar包/可执行程序等）和配置信息给JobTracker，后者负责分发这些软件和配置信息给slave、调度任务并监控它们的执行，同时提供状态和诊断信息给job-client。<br>虽然Hadoop框架是用Java实现的，但Map/Reduce应用程序则不一定要用 Java来写 。<br><img src="http://7xract.com1.z0.glb.clouddn.com/MapReduce&amp;&amp;Shili1.jpg" alt="MapReduce处理大数据过程"></p>
 </blockquote>
 <h4 id="2-_u6837_u4F8B_u5206_u6790_uFF1A_u5355_u8BCD_u8BA1_u6570"><a href="#2-_u6837_u4F8B_u5206_u6790_uFF1A_u5355_u8BCD_u8BA1_u6570" class="headerlink" title="2.样例分析：单词计数"></a>2.样例分析：单词计数</h4><blockquote>
