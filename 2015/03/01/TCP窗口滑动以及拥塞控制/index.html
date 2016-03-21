@@ -8,26 +8,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="TCP窗口滑动以及拥塞控制TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。
 
-一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范">
+一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP窗口滑动以及拥塞控制">
 <meta property="og:url" content="http://yoursite.com/2015/03/01/TCP窗口滑动以及拥塞控制/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
 <meta property="og:description" content="TCP窗口滑动以及拥塞控制TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。
 
-一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范">
+一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_1.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_2.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_3.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_4.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_5.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_6.png">
-<meta property="og:updated_time" content="2016-03-07T13:44:04.110Z">
+<meta property="og:updated_time" content="2016-03-21T12:55:42.359Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP窗口滑动以及拥塞控制">
 <meta name="twitter:description" content="TCP窗口滑动以及拥塞控制TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。
 
-一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范">
+一、滑动窗口协议     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -211,7 +211,7 @@
       
         <h2 id="TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236"><a href="#TCP_u7A97_u53E3_u6ED1_u52A8_u4EE5_u53CA_u62E5_u585E_u63A7_u5236" class="headerlink" title="TCP窗口滑动以及拥塞控制"></a>TCP窗口滑动以及拥塞控制</h2><p>TCP协议作为一个可靠的面向流的传输协议，其可靠性和流量控制由滑动窗口协议保证，而拥塞控制则由控制窗口结合一系列的控制算法实现。</p>
 <blockquote>
-<p>一、滑动窗口协议<br>     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。<br>     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范围称之为“窗口”；2. “滑动”则是指这段“允许发送的范围”是可以随着发送的过程而变化的，方式就是按顺序“滑动”。在引入一个例子来说这个协议之前，我觉得很有必要先了解以下前提：<br>1）TCP协议的两端分别为发送者A和接收者B，由于是全双工协议，因此A和B应该分别维护着一个独立的发送缓冲区和接收缓冲区，由于对等性（A发B收和B发A收），我们以A发送B接收的情况作为例子；<br>2）发送窗口是发送缓存中的一部分，是可以被TCP协议发送的那部分，其实应用层需要发送的所有数据都被放进了发送者的发送缓冲区；<br>3）发送窗口中相关的有四个概念：已发送并收到确认的数据（不再发送窗口和发送缓冲区之内）、已发送但未收到确认的数据（位于发送窗口之中）、允许发送但尚未发送的数据以及发送窗口外发送缓冲区内暂时不允许发送的数据；<br>4）每次成功发送数据之后，发送窗口就会在发送缓冲区中按顺序移动，将新的数据包含到窗口中准备发送；<br>     TCP建立连接的初始，B会告诉A自己的接收窗口大小，比如为‘20’：<br>     字节31-50为发送窗口<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_1.png" alt="TCP窗口滑动以及拥塞控制_1"><br>A发送11个字节后，发送窗口位置不变，B接收到了乱序的数据分组：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_2.png" alt="TCP窗口滑动以及拥塞控制_2"><br>只有当A成功发送了数据，即发送的数据得到了B的确认之后，才会移动滑动窗口离开已发送的数据；同时B则确认连续的数据分组，对于乱序的分组则先接收下来，避免网络重复传递：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_3.png" alt="TCP窗口滑动以及拥塞控制_3"></p>
+<p>一、滑动窗口协议<br>     关于这部分自己不晓得怎么叙述才好，因为理解的部分更多，下面就用自己的理解来介绍下TCP的精髓：滑动窗口协议。<br>     <a id="more"></a><br>     所谓滑动窗口协议，自己理解有两点：1. “窗口”对应的是一段可以被发送者发送的字节序列，其连续的范围称之为“窗口”；2. “滑动”则是指这段“允许发送的范围”是可以随着发送的过程而变化的，方式就是按顺序“滑动”。在引入一个例子来说这个协议之前，我觉得很有必要先了解以下前提：<br>1）TCP协议的两端分别为发送者A和接收者B，由于是全双工协议，因此A和B应该分别维护着一个独立的发送缓冲区和接收缓冲区，由于对等性（A发B收和B发A收），我们以A发送B接收的情况作为例子；<br>2）发送窗口是发送缓存中的一部分，是可以被TCP协议发送的那部分，其实应用层需要发送的所有数据都被放进了发送者的发送缓冲区；<br>3）发送窗口中相关的有四个概念：已发送并收到确认的数据（不再发送窗口和发送缓冲区之内）、已发送但未收到确认的数据（位于发送窗口之中）、允许发送但尚未发送的数据以及发送窗口外发送缓冲区内暂时不允许发送的数据；<br>4）每次成功发送数据之后，发送窗口就会在发送缓冲区中按顺序移动，将新的数据包含到窗口中准备发送；<br>     TCP建立连接的初始，B会告诉A自己的接收窗口大小，比如为‘20’：<br>     字节31-50为发送窗口<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_1.png" alt="TCP窗口滑动以及拥塞控制_1"><br>A发送11个字节后，发送窗口位置不变，B接收到了乱序的数据分组：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_2.png" alt="TCP窗口滑动以及拥塞控制_2"><br>只有当A成功发送了数据，即发送的数据得到了B的确认之后，才会移动滑动窗口离开已发送的数据；同时B则确认连续的数据分组，对于乱序的分组则先接收下来，避免网络重复传递：<br><img src="http://7xract.com1.z0.glb.clouddn.com/TCP%E7%AA%97%E5%8F%A3%E6%BB%91%E5%8A%A8%E4%BB%A5%E5%8F%8A%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6_3.png" alt="TCP窗口滑动以及拥塞控制_3"></p>
 </blockquote>
 <hr>
 <blockquote>

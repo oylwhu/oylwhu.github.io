@@ -7,13 +7,13 @@
   <title>路由器工作原理及数据流分析 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="路由器工作原理及数据流分析">
 <meta property="og:url" content="http://yoursite.com/2015/02/19/Route/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
 <meta property="og:description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route3.png">
@@ -24,11 +24,11 @@
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route8.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route9.png">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/2_Route10.png">
-<meta property="og:updated_time" content="2016-03-07T13:43:53.100Z">
+<meta property="og:updated_time" content="2016-03-21T12:55:23.200Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="路由器工作原理及数据流分析">
 <meta name="twitter:description" content="路由器工作原理及数据流分析
-路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。当不在同网段时，将数据包发送给默认网关，由网">
+路由表：网段+掩码 出口    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -211,7 +211,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <h2 id="u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790"><a href="#u8DEF_u7531_u5668_u5DE5_u4F5C_u539F_u7406_u53CA_u6570_u636E_u6D41_u5206_u6790" class="headerlink" title="路由器工作原理及数据流分析"></a>路由器工作原理及数据流分析</h2><blockquote>
-<p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br>当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。<br>当不在同网段时，将数据包发送给默认网关，由网关进行三层转发。<br>“与”运算时用的是自己的掩码。如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png" alt="主机通信原理测试"></p>
+<p><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route1.png" alt="路由器工作原理"><br>路由表：网段+掩码 出口<br>    源主机将目标主机的IP地址与自己的掩码进行“与”运算，同时将自己的IP地址也与自己掩码“与”，如相同，则在同一网段。<br><a id="more"></a><br>当同一网段时：通过ARP（Address Resolution Protocol）地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议，请求对方MAC，直接进行二层通信。<br>当不在同网段时，将数据包发送给默认网关，由网关进行三层转发。<br>“与”运算时用的是自己的掩码。如下图所示：<br><img src="http://7xract.com1.z0.glb.clouddn.com/2_Route2.png" alt="主机通信原理测试"></p>
 </blockquote>
 <hr>
 <blockquote>

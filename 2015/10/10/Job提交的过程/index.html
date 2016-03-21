@@ -6,20 +6,17 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <title>Job提交的过程 | Oylwhu Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
-1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
+  <meta name="description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Job提交的过程">
 <meta property="og:url" content="http://yoursite.com/2015/10/10/Job提交的过程/index.html">
 <meta property="og:site_name" content="Oylwhu Blog">
-<meta property="og:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
-1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
+<meta property="og:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？">
 <meta property="og:image" content="http://7xract.com1.z0.glb.clouddn.com/MapReduce&&Kuangjia4.jpg">
-<meta property="og:updated_time" content="2016-03-13T09:44:45.416Z">
+<meta property="og:updated_time" content="2016-03-21T12:53:47.421Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Job提交的过程">
-<meta name="twitter:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？
-1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长">
+<meta name="twitter:description" content="Job提交的过程【转】原文在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？">
   
     <link rel="alternative" href="/atom.xml" title="Oylwhu Blog" type="application/atom+xml">
   
@@ -201,7 +198,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="Job_u63D0_u4EA4_u7684_u8FC7_u7A0B"><a href="#Job_u63D0_u4EA4_u7684_u8FC7_u7A0B" class="headerlink" title="Job提交的过程"></a>Job提交的过程</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917213.html" target="_blank" rel="external">原文</a><br>在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？</p>
+        <h2 id="Job_u63D0_u4EA4_u7684_u8FC7_u7A0B"><a href="#Job_u63D0_u4EA4_u7684_u8FC7_u7A0B" class="headerlink" title="Job提交的过程"></a>Job提交的过程</h2><p>【转】<a href="http://www.cnblogs.com/esingchan/p/3917213.html" target="_blank" rel="external">原文</a><br>在分析之前，我们先进行一下粗略的思考，如果要我们自己设计分布式计算，应该怎么设计呢？假定有100个任务要并发执行，每个任务分别针对一块数据，这些数据本身是分布在多个机器上的，主要面临哪些问题？<br><a id="more"></a></p>
 <p>1、数据如何分布是首先面临的问题，可能也是影响分布式计算性能的最关键问题。一个超大文件，按照哪种方式切割开来，分别丢到不同的机器？Hadoop的答案是按照64MB或者128MB等长切割，如果切的太小，要记录的元数据信息太多，如果切得太大，负载均衡可能比较差。如果按照某种方式切割开来后，怎么丢到多个机器？我觉得一种最简单的方案就是哪台机器剩余空间越多，就往哪台机器上丢。这样在存储空间上可以保持差不多。而且，不太会存在热点问题。这个以后分析HDFS的时候再看；</p>
 <p>2、假如已经分布好了，那么任务的计算就在数据所在机器执行。哪个机器拥有什么数据，哪个机器就负责对自己拥有那块数据进行处理。任务的划分就取决于数据的划分，比如一个机器拥有了5个64MB，那就给他分配5个任务，各自处理一块，这种符合直觉的思维也是Hadoop采用的。当然，实际上没这么简单，比如有的机器可能数据分布就是多了些，那么岂不是这台机器会成为短板，整个作业的执行时间依赖于最慢这台机器执行的时间。在Hadoop里，为了解决这个问题，会把一个任务可能丢到两个机器上执行，谁先处理完，另一个就停了它。不管怎样，只要涉及到任务分配，是不是至少有一台机器负责这个分配过程吧？所以MapReduce有一个主控节点。不过理论上看也未必，假如大家按照某种同样的算法就能知道什么样的任务该到哪台机器上算，整个分布式计算集群也可以是P2P的。</p>
 <p>3、关键的问题来了，如果数据之间存在关联怎么办？比如一个任务的执行需要依赖于另一个任务执行完毕才能开始，这种同步等待是并行计算的大忌，有可能大部分时间会花在等待上，甚至还不如串行执行？Hadoop里面假设的就是任务可以完全并行，如果需要关联，那么，就在这些并行任务之后，再启动一个任务去关联，后面的这种任务就是Reduce，不过天底下不一定都能这么理想地分，所以我觉得Hadoop还是有一定先天缺陷的，模型还是简单了点。</p>
